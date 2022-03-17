@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>HANA</title>
+
+        {% load bootstrap5 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+    </head>
+
+    <body>
+        {% block navbar %}
+            {% include '_items/navbar.html' %}
+        {% endblock %}
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </body>
+
+    <footer>
+        {% block footer %}
+            {% include '_items/footer.html' %}
+        {% endblock %}
+    </footer>
+</html>
