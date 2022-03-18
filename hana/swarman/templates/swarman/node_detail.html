@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+    Hostname: {{ hostname }}<br>
+    Role: {{ role }}<br>
+    Status: {{ availability }}<br>
+    Architecture: {{ architecture }}<br>
+    OS: {{ os }}<br>
+    IP Address: {{ ip_address }}<br>
+    Total Cores: {{ cores }}<br>
+    Memory Usage / Total: {{ total_memory_usage }}% / {{ memory }}GB<br>
+    CPU Usage: {{ total_cpu_usage }}%<br>
+    Containers: <ul>
+    {% for container in container_stats %}
+        <li>{{ container.0 }}
+            <ul>
+                <li>CPU Usage: {{ container.1 }}%</li>
+                <li>Memory Usage: {{ container.2 }}%</li>
+            </ul>
+        </li>
+    {% endfor %}
+    </ul>
+
+</div>
+
+{% endblock %}
