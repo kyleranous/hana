@@ -5,7 +5,8 @@ HANA is a Home Automation Server management tool. Initial development will run i
 
 
 ## TODO
-
+### Docker API
+Program is being developed using [Docker API v1.41](https://docs.docker.com/engine/api/v1.41/)
 ### Setup Swarm Manager
 This will probably need to be done as part of a setup script.
 script will:
