@@ -15,6 +15,10 @@
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                         <li><a class="dropdown-item" href="/swarman/dashboard">Dashboard</a></li>
+                    
+                        {% for swarm in swarm_list %}
+                            <li>{{ swarm }}<li>
+                        {% endfor %}
                     </ul>
                 </li>
             </ul>
