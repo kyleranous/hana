@@ -79,15 +79,18 @@ def node_detail(request, node_id):
         cpu_cores = node_json['Description']['Resources']['NanoCPUs'] / (10**9)
         memory = node_json['Description']['Resources']['MemoryBytes'] / (10**9)
         ip_address = node_json['Status']['Addr']
-
+        if ip_address == '0.0.0.0': # This is added for a bug with docker reporting some manager nodes IP as the default listen address
+            ip_address = node_json['ManagerStatus']['Addr']
+            ip_address = ip_address.split(':')[0]
         container_response = requests.get(f'http://{ip_address}:2375/containers/json')
+        
         container_data = container_response.text
         container_json = json.loads(container_data)
-
+        
         container_stats = []
         total_cpu_usage = 0
         total_memory_usage = 0
-
+        
         context = {
             'labels': labels,
             'role': role,
@@ -99,7 +102,7 @@ def node_detail(request, node_id):
             'memory': format(memory, '.3f'),
             'ip_address': ip_address
         }
-
+        
         
         for container in container_json:
             
