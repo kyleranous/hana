@@ -54,11 +54,14 @@ def node_detail(request, node_id):
 
     `sudo nano /lib/systemd/system/docker.service`
     Find Line 'ExecStart=...'
-    Add 'cp://0.0.0.0:2375 -H' After 'usr/bin/dockerd -H'
+    Add '-H=tcp://0.0.0.0:2375' After 'fd://'
 
     Restart Services
     'sudo systemctl daemon-reload'
     'sudo service docker restart'
+
+    *** Alternatively ***
+    sudo sed -i 's+ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock+ExecStart=/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:2375 --containerd=/run/containerd/containerd.sock+g' /lib/systemd/system/docker.service
     """
 
     try:
@@ -66,7 +69,7 @@ def node_detail(request, node_id):
         node_data = node_response.text
 
         node_json = json.loads(node_data)
-
+        
         labels = node_json['Spec']['Labels']
         role = node_json['Spec']['Role']
         availability = node_json['Spec']['Availability']
@@ -84,28 +87,7 @@ def node_detail(request, node_id):
         container_stats = []
         total_cpu_usage = 0
         total_memory_usage = 0
-        for container in container_json:
 
-            id = container['Id']
-            resource_response = requests.get(f'http://{ip_address}:2375/containers/{id}/stats?stream=0')
-            resource_data = resource_response.text
-            resource_json = json.loads(resource_data)
-
-            cpu_delta = resource_json['cpu_stats']['cpu_usage']['total_usage'] - resource_json['precpu_stats']['cpu_usage']['total_usage']
-            system_cpu_delta = resource_json['cpu_stats']['system_cpu_usage'] - resource_json['precpu_stats']['system_cpu_usage']
-            number_cpus = resource_json['cpu_stats']['online_cpus']
-            cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
-            total_cpu_usage += cpu_usage
-
-            used_memory = resource_json['memory_stats']['usage'] - resource_json['memory_stats']['stats']['cache']
-            available_memory = resource_json['memory_stats']['limit']
-            memory_usage = (used_memory / available_memory) * 100.0
-            total_memory_usage += memory_usage
-        
-            container_stats.append((container['Names'][0],
-                                    format(cpu_usage, '.2f'), 
-                                    format(memory_usage, '.2f')))
-    
         context = {
             'labels': labels,
             'role': role,
@@ -115,14 +97,48 @@ def node_detail(request, node_id):
             'os': operating_system,
             'cores': int(cpu_cores),
             'memory': format(memory, '.3f'),
-            'ip_address': ip_address,
-            'total_cpu_usage': format(total_cpu_usage, '.2f'),
-            'total_memory_usage': format(total_memory_usage, '.2f'),
-            'container_stats': container_stats,
-            'containers_url' : f'http://{ip_address}:2375/containers/{id}/stats?stream=0',
+            'ip_address': ip_address
         }
+
+        
+        for container in container_json:
+            
+            id = container['Id']
+            resource_response = requests.get(f'http://{ip_address}:2375/containers/{id}/stats?stream=0')
+            resource_data = resource_response.text
+            resource_json = json.loads(resource_data)
+            
+            cpu_delta = resource_json['cpu_stats']['cpu_usage']['total_usage'] - resource_json['precpu_stats']['cpu_usage']['total_usage']
+            system_cpu_delta = resource_json['cpu_stats']['system_cpu_usage'] - resource_json['precpu_stats']['system_cpu_usage']
+            number_cpus = resource_json['cpu_stats']['online_cpus']
+            cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
+            total_cpu_usage += cpu_usage
+            # Need to allow memory tracking on Raspberry Pi
+            if architecture != 'armv7l':
+                print(resource_json['memory_stats']['stats'])
+                used_memory = resource_json['memory_stats']['usage'] - resource_json['memory_stats']['stats']['cache']
+                print("Checkpoint 2")
+                available_memory = resource_json['memory_stats']['limit']
+            
+                memory_usage = (used_memory / available_memory) * 100.0
+                total_memory_usage += memory_usage
+            else:
+                memory_usage = 0
+                total_memory_usage = 0
+            
+            container_stats.append((container['Names'][0],
+                                    format(cpu_usage, '.2f'), 
+                                    format(memory_usage, '.2f')))
+
+            context['total_cpu_usage'] = format(total_cpu_usage, '.2f')
+            context['total_memory_usage'] = format(total_memory_usage, '.2f')
+        
+        context['container_stats'] = container_stats
+            
     except:
         context = {
             'error' : f'There was an error fetching data from {node_id}'
         }
+
+    
     return render(request, 'swarman/node_detail.html', context)
