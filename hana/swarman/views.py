@@ -1,8 +1,10 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import JsonResponse
 
 import requests
 import json
+
+from .models import Swarm
 
 
 SWARM_MANAGER_URL = 'http://192.168.1.200:2375'
@@ -145,3 +147,33 @@ def node_detail(request, node_id):
 
     
     return render(request, 'swarman/node_detail.html', context)
+
+
+def new_swarm(request):
+
+    return render(request, 'swarman/new_swarm.html')
+
+
+def create_swarm(request):
+    '''Creates a New Swarm in Swarm Model'''
+
+    swarm_name = request.GET.get('name', None)
+
+    if swarm_name:
+        # Check to see if swarm_name is currently in use
+        s = Swarm.objects.filter(swarm_name=swarm_name).first()
+
+        if not s:
+            # If not in use, create a new swarm
+            print(f"No Swarm with name {swarm_name} Found, creating now")
+            try:
+                Swarm.objects.create(swarm_name=swarm_name)
+                return JsonResponse({'success': f'{swarm_name} created successfully'})
+            except:
+                return JsonResponse({'error': 'An error has occured'})
+
+        else:
+            # If in use, send error Code
+            return JsonResponse({'error': f'{swarm_name} already in use'})
+    else:
+        return JsonResponse({'error': 'Swarm Name cannot be blank'})
