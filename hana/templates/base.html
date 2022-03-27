@@ -8,21 +8,30 @@
         {% load bootstrap5 %}
         {% bootstrap_css %}
         {% bootstrap_javascript %}
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        {% load static %}
+        {% block templateStatics %}{% endblock %}
     </head>
 
-    <body>
-        {% block navbar %}
-            {% include '_items/navbar.html' %}
-        {% endblock %}
-        <div class="container">
-            {% block content %}{% endblock %}
-        </div>
+    <body class="d-flex flex-column min-vh-100">
+        <header>
+            {% block navbar %}
+                {% include '_items/navbar.html' %}
+            {% endblock %}
+        </header>
+        <main class="flex-shrink-0">
+            <div class="container">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
 
-    </body>
-
-    <footer>
+        
         {% block footer %}
             {% include '_items/footer.html' %}
         {% endblock %}
-    </footer>
+        
+
+    </body>
+
+    
 </html>
