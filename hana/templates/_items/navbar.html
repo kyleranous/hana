@@ -17,8 +17,10 @@
                         <li><a class="dropdown-item" href="/swarman/dashboard">Dashboard</a></li>
                     
                         {% for swarm in swarm_list %}
-                            <li>{{ swarm }}<li>
+                            <li><a class="dropdown-item" href="#">{{ swarm.swarm_name }}</a><li>
                         {% endfor %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'swarman:new_swarm' %}">New Swarm</a></li>
                     </ul>
                 </li>
             </ul>
