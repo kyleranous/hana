@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+
+{% block templateStatics %}
+    {% load static %}
+    <script src="{% static 'swarman/new_swarm.js' %}"></script>
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+    <h4>Setup New Swarm</h4>
+    <div class="container text-center" id="swarm_setup">
+       
+            <button type="button" class="btn btn-primary" style="margin: 10px;" onclick="new_swarm()">Create New Swarm</button>
+            <button type="button" class="btn btn-primary" style="margin: 10px;" onclick="existing_swarm()">Add Existing Swarm</button>
+            
+        </div>
+    </div>
+</div>
+
+{% endblock %}
