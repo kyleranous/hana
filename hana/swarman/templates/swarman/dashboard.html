@@ -5,7 +5,7 @@
     <div class="row">
         {% for node in nodes %}
             <div class="col-2" style="text-align: center;">
-                <a href="{% url 'node_detail' node.0 %}">{{ node.0 }}</a><br>
+                <a href="{% url 'swarman:node_detail' node.0 %}">{{ node.0 }}</a><br>
                 {{ node.2|title }}<br>
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="{% if node.1 == 'ready' %}green{% else %}red{% endif %}" class="bi bi-circle-fill" viewbox="0 0 10 10"><circle cx="5" cy="5" r="5" /></svg> {{ node.1|title }}
             </div>
