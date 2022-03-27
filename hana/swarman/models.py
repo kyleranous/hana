@@ -13,7 +13,7 @@ class Swarm(models.Model):
     """
     Swarm Model is for multiple swarm management. This is a feature that may be implemented at a future time
     """
-    swarm_name = models.CharField(max_length=64)
+    swarm_name = models.CharField(max_length=64, unique=True)
     manager_join_token = models.CharField(max_length=200, blank=True, null=True)
     worker_join_token = models.CharField(max_length=200, blank=True, null=True)
 
@@ -131,8 +131,8 @@ class Node(models.Model):
         for address in self.swarm.manager_ip_list():
             url = f'http://{address}/nodes/{self.hostname}'
             node_response = requests.get(url)
-
-            if node_response.status_code == '200':
+            print(type(node_response.status_code))
+            if node_response.status_code == 200:
                 node_data = node_response.text
                 
                 return json.loads(node_data)
@@ -145,6 +145,7 @@ class Node(models.Model):
     def get_cpu_load(self):
         '''
             Calculate the current CPU load on the node, returns value as a percentage
+            Returns float
             docker API v1.41
         '''
 
@@ -163,7 +164,7 @@ class Node(models.Model):
             cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
             total_cpu_load += cpu_usage
 
-        return total_cpu_load
+        return float(format(total_cpu_load, '.2f'))
 
 
     def get_container_info(self, container_id):
@@ -173,14 +174,15 @@ class Node(models.Model):
         '''
         
         container_response = requests.get(f'http://{self.ip_address}:{self.api_port}/containers/{container_id}/stats?stream=0')
-        container_json = json.loads(container_response)
+        container_json = json.loads(container_response.text)
 
         return container_json
         
 
-    def get_memory_usage(self, container_id):
+    def get_memory_usage(self):
         '''
             Calculate Memory Usage on a Node, returns memory usage as percentage
+            Returns Float
             docker API v1.41
         '''
         # Check to see if node is armv71
@@ -205,5 +207,5 @@ class Node(models.Model):
                 memory_usage = (used_memory / available_memory) * 100.0
                 total_memory_load += memory_usage
 
-            return total_memory_load
+            return float(format(total_memory_load, '.2f'))
 
