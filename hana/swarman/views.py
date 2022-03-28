@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.views import View
 
 import requests
 import json
@@ -149,10 +150,6 @@ def node_detail(request, node_id):
     return render(request, 'swarman/node_detail.html', context)
 
 
-def new_swarm(request):
-
-    return render(request, 'swarman/new_swarm.html')
-
 
 def create_swarm(request):
     '''Creates a New Swarm in Swarm Model'''
@@ -177,3 +174,18 @@ def create_swarm(request):
             return JsonResponse({'error': f'{swarm_name} already in use'})
     else:
         return JsonResponse({'error': 'Swarm Name cannot be blank'})
+
+
+class AddSwarm(View):
+    '''
+    Class View for adding new swarms to swarman
+    '''
+
+    template_name = 'swarman/new_swarm.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name)
+
+    def post(self, request, *args, **kwargs):
+        # If request contains 
+        pass
