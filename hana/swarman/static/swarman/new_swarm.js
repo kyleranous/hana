@@ -26,37 +26,31 @@ function new_swarm() {
 function check_swarm_name_existing() {
     //Verify name has been entered
     var swarm_name = document.getElementById('swarm_name').value;
+    const csrftoken = getCookie('csrftoken')
+    
 
-    if (swarm_name == "") {
-
-        let notice = document.getElementById("name_notification");
-        notice.innerHTML = '<span style="color: red;">Please Enter a name</span>';
-
-    }
-
-    else {
-
-        swarm_name = swarm_name.replace(' ', '+');
-        //Attempt to create Swarm name
-        $.getJSON(`/swarman/create_swarm?name=${swarm_name}`, function(data) {
-            
-            //If error message returned, display error message
-            if (data.hasOwnProperty('error')) {
-
-                let notice = document.getElementById("name_notification");
-                notice.innerHTML = `<span style="color: red;">${data['error']}</span>`;
-                
-            }
-            
-            else {
-                
-                get_swarm_ip_address();
-            }
-            
-            
-        });
         
-    }
+    //Attempt to create Swarm name
+    $.ajax({
+        url: "/swarman/api/swarms/",
+        method: "POST",
+        dataType: "json",
+        data: {
+            "swarm_name": swarm_name
+        },
+        headers: {"X-CSRFToken": csrftoken },
+        success: function(data) {
+            //Success function happens here
+            get_swarm_ip_address();
+            },
+        error: function(data) {
+            //If POST Request fails, display error message
+            var parsed_data = JSON.parse(data.responseText)
+            let notice = document.getElementById("name_notification");
+            notice.innerHTML = `<span style="color: red;">${parsed_data.swarm_name[0]}</span>`        
+            }
+    });
+        
 }
 
 function get_swarm_ip_address() {
@@ -86,16 +80,47 @@ function get_swarm_ip_address() {
 
 function get_swarm_data() {
     container = document.getElementById('swarm_setup');
-
+    const csrftoken = getCookie('csrftoken')
     const swarm_address = document.getElementById('swarm_address').value;
 
     let html = `
-    <p> Fetching node information from http://${swarm_address}...
+    <p> Fetching node information from ${swarm_address}...
     `
     container.innerHTML = html;
     //send node information request to a view that will return a formatted JSON object
     // with the Node information retrieved from the
-    
+    $.ajax({
+        url: "/swarman/api/swarms/existing_swarm_nodes",
+        method: "POST",
+        dataType: "json",
+        data: {
+            "swarm_address": swarm_address
+        },
+        headers: {"X-CSRFToken": csrftoken },
+        success: function(data) {
+            //Success function happens here
+            console.log(data)
+            
+        },
+        error: function(data) {
+            let html = `
+                <p>
+                Enter the IP address (or hostname) and API port of your swarm manager.<br>
+                </p>
+                <p class="fst-italic">
+                xxx.xxx.x.xxx:xxxx or hostname:xxxx
+                </p>
+                <div class="container container-sm text-center" style="max-width: 500px;" id="">
+                    <div class="input-group mb-3 flex-nowrap">
+                        <input type="text" class="form-control" id="swarm_address">
+                        <button type="button" class="btn btn-primary" onclick="get_swarm_data()">Next</button>
+                    </div>
+                    <p id="name_notification"><span style="color: red;">${data.responseJSON.error}</span></p>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+    })
 }
 
 
