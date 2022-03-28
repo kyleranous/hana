@@ -47,13 +47,71 @@ function check_swarm_name_existing() {
                 notice.innerHTML = `<span style="color: red;">${data['error']}</span>`;
                 
             }
-
+            
             else {
-                //If it succeeds, go to next step
-
+                
+                get_swarm_ip_address();
             }
+            
             
         });
         
     }
+}
+
+function get_swarm_ip_address() {
+    //Get the IP Address of the Swarm for nodes to be automatically added
+    container = document.getElementById('swarm_setup');
+
+    let html = `
+    <p>
+        Enter the IP address (or hostname) and API port of your swarm manager.<br>
+    </p>
+    <p class="fst-italic">
+        xxx.xxx.x.xxx:xxxx or hostname:xxxx
+    </p>
+    <div class="container container-sm text-center" style="max-width: 500px;" id="">
+        <div class="input-group mb-3 flex-nowrap">
+            <input type="text" class="form-control" id="swarm_address">
+            <button type="button" class="btn btn-primary" onclick="get_swarm_data()">Next</button>
+        </div>
+        <p id="name_notification"></p>
+    </div>
+    `;
+    container.innerHTML = html;
+
+    const csrftoken = getCookie('csrftoken')
+    console.log(csrftoken)
+}
+
+function get_swarm_data() {
+    container = document.getElementById('swarm_setup');
+
+    const swarm_address = document.getElementById('swarm_address').value;
+
+    let html = `
+    <p> Fetching node information from http://${swarm_address}...
+    `
+    container.innerHTML = html;
+    //send node information request to a view that will return a formatted JSON object
+    // with the Node information retrieved from the
+    
+}
+
+
+// This Function needs to be moved to a javascript utils folder
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
