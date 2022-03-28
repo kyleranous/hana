@@ -112,7 +112,7 @@ function get_swarm_data() {
                 </p>
                 <div class="container container-sm text-center" style="max-width: 500px;" id="">
                     <div class="input-group mb-3 flex-nowrap">
-                        <input type="text" class="form-control" id="swarm_address">
+                        <input type="text" class="form-control" id="swarm_address" value="${swarm_address}">
                         <button type="button" class="btn btn-primary" onclick="get_swarm_data()">Next</button>
                     </div>
                     <p id="name_notification"><span style="color: red;">${data.responseJSON.error}</span></p>
