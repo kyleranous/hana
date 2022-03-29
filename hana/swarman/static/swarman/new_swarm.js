@@ -123,9 +123,20 @@ function get_swarm_data() {
                 `
             }
             table += `</tbody></table>`;
-            console.log(container)
+            buttons = `<div class="row">
+                    <div class="col-4">
+                        <button class="btn btn-primary" onclick="get_swarm_ip_address()">Back</button>
+                    </div>
+                    <div class="col-4">
+                        Does node information appear to be correct?
+                    </div>
+                    <div class="col-4">
+                        <button class="btn btn-primary" onclick="">Next</button>
+                    </div>
+                </div>
+            `
+            table += buttons
             container.innerHTML = table;
-            console.log(container)
             
         },
         error: function(data) {
