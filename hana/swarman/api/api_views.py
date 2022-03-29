@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.parsers import JSONParser
 
+import json
+
 from swarman.models import Swarm, Node
 from .serializers import SwarmSerializer, NodeSerializer
 from . import api_utils
@@ -59,7 +61,12 @@ def get_existing_swarm_nodes(request):
                 url = url.split('/')[0]
             
                 # Attempt fetch node info from swarm_address
-                return Response({"swarm_address":url}, status=status.HTTP_200_OK)
+
+                node_data = api_utils.get_existing_node_info(url)
+                if 'error' in node_data.keys():
+                    return Response(json.dumps(node_data), status=status.HTTP_400_BAD_REQUEST)
+
+                return Response(json.dumps(node_data), status=status.HTTP_200_OK)
         
         return Response({'error': "Field is Required"}, status=status.HTTP_400_BAD_REQUEST)
 
