@@ -99,7 +99,33 @@ function get_swarm_data() {
         headers: {"X-CSRFToken": csrftoken },
         success: function(data) {
             //Success function happens here
-            console.log(data)
+            container = document.getElementById('swarm_setup');
+            const nodes = JSON.parse(data)
+            console.log(nodes)
+            var table = `<p>Discovered Nodes at ${swarm_address}</p>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Hostname</th>
+                        <th scope="col">IP Address</th>
+                        <th scope="col">Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `
+            console.log(Object.keys(nodes.nodes).length)
+            for (var i=0; i<Object.keys(nodes.nodes).length; i++) {
+                table += `<tr>
+                        <td>${nodes.nodes[i].hostname}</td>
+                        <td>${nodes.nodes[i].ip_address}</td>
+                        <td>${nodes.nodes[i].role}</td>
+                    </tr>
+                `
+            }
+            table += `</tbody></table>`;
+            console.log(container)
+            container.innerHTML = table;
+            console.log(container)
             
         },
         error: function(data) {
