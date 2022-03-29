@@ -49,7 +49,7 @@ def get_existing_swarm_nodes(request):
     """ 
     Takes in an IP address or Hostname and port for an existing swarm
     and retrieves a list of nodes belonging to the swarm. Used when adding
-    an existing Swarm to the HANA Swarm Manager.
+    an existing Swarm to the HANA Swarm Manager through the HANA UI.
     Docker API v1.41
     """
     if request.method == 'POST':
