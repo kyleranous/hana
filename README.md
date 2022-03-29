@@ -6,17 +6,12 @@ HANA is a Home Automation Server management tool. Initial development will run i
 
 ## TODO
 ### Docker API
-Program is being developed using [Docker API v1.41](https://docs.docker.com/engine/api/v1.41/)
-### Setup Swarm Manager
-This will probably need to be done as part of a setup script.
-script will:
- - [ ] Ask for Swarm Name
- - [ ] Configure Host files
- - [ ] Download and Install Docker
- - [ ] Activate Docker API
- - [ ] Download hana docker image
- - [ ] Set it up as a service
+Application is being developed using [Docker API v1.41](https://docs.docker.com/engine/api/v1.41/)
 
+## Roadmap
 
-### Initial Image Run
-
+| Version | Major Focus | Minor Focus | Notes |
+| :---: | :--- | :--- | :--- |
+| 0.1 | <ul><li>Initial Development</li><li>Setup Swarm/ Get Node Info</ul> | <ul><li>Initial Documentation Setup</li><li>API Auto-Doc Setup</li></ul> | Initial Development. Focusing on Swarman app and setting up documentation. |
+| 0.2 | <ul><li>Image Deployment</li></ul> |<ul><li>Container Dashboard</li></ul>  | Start developing single click deployment. With a few specific images first. As services are started, they will be added to the dashboard | 
+| 0.3 | <ul><li>Distributed Storage Setup</li></ul> | | |
