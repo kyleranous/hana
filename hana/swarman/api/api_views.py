@@ -70,4 +70,47 @@ def get_existing_swarm_nodes(request):
         
         return Response({'error': "Field is Required"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+@api_view(['POST'])
+def add_existing_swarm_nodes(request):
+    """
+    Takes in an IP address or Hostname and port for an existing swarm,
+    retrieves a list of nodes belonging to the swarm, and adds them to the 
+    database. Used when adding an existing Swarm to the HANA Swarm Manager 
+    through the HANA UI.
+    Docker API v1.41
+    """
+    if request.method == 'POST':
+        if "swarm_id" in request.data.keys():
+            if "swarm_address" in request.data.keys():
+                if request.data['swarm_address'] != "":
+                    # Sanitize url to remove any attachments
+                    url = request.data['swarm_address'].split('//')[-1]
+                    url = url.split('/')[0]
             
+                    # Attempt fetch node info from swarm_address
+
+                    node_data = api_utils.get_existing_node_info(url)
+                    if 'error' in node_data.keys():
+                        return Response(json.dumps(node_data), status=status.HTTP_400_BAD_REQUEST)
+
+                    # Add Nodes to Swarm
+                    swarm = Swarm.objects.filter(id=request.data['swarm_id']).first()
+                    tokens = api_utils.get_swarm_tokens(url)
+                    swarm.manager_join_token = tokens['Manager']
+                    swarm.worker_join_token = tokens['Worker']
+                    swarm.save()
+
+                    for node in node_data['nodes']:
+                        Node.objects.create(hostname=node['hostname'],
+                                            ip_address=node['ip_address'],
+                                            api_port=2375,
+                                            role=node['role'],
+                                            swarm=swarm,
+                                            docker_version_index=node['docker_version_index'],
+                                            node_architecture=node['node_architecture'])
+
+                    return Response({'success' : 'All Nodes Added Successfully'}, status=status.HTTP_201_CREATED)
+        
+            return Response({'error': "Field is Required"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': "swarm_id is Required"}, status=status.HTTP_400_BAD_REQUEST)
