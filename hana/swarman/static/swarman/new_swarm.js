@@ -1,3 +1,6 @@
+var swarm_address
+var swarm_id
+
 function existing_swarm() {
 
     console.log('Add Existing Swarm')
@@ -27,8 +30,6 @@ function check_swarm_name_existing() {
     //Verify name has been entered
     var swarm_name = document.getElementById('swarm_name').value;
     const csrftoken = getCookie('csrftoken')
-    
-
         
     //Attempt to create Swarm name
     $.ajax({
@@ -41,6 +42,7 @@ function check_swarm_name_existing() {
         headers: {"X-CSRFToken": csrftoken },
         success: function(data) {
             //Success function happens here
+            swarm_id = data.id
             get_swarm_ip_address();
             },
         error: function(data) {
@@ -81,7 +83,7 @@ function get_swarm_ip_address() {
 function get_swarm_data() {
     container = document.getElementById('swarm_setup');
     const csrftoken = getCookie('csrftoken')
-    const swarm_address = document.getElementById('swarm_address').value;
+    swarm_address = document.getElementById('swarm_address').value;
 
     let html = `
     <p> Fetching node information from ${swarm_address}...
@@ -100,7 +102,7 @@ function get_swarm_data() {
         success: function(data) {
             //Success function happens here
             container = document.getElementById('swarm_setup');
-            const nodes = JSON.parse(data)
+            nodes = JSON.parse(data)
             console.log(nodes)
             var table = `<p>Discovered Nodes at ${swarm_address}</p>
             <table class="table table-striped">
@@ -131,7 +133,7 @@ function get_swarm_data() {
                         Does node information appear to be correct?
                     </div>
                     <div class="col-4">
-                        <button class="btn btn-primary" onclick="">Next</button>
+                        <button class="btn btn-primary" onclick="add_nodes()">Next</button>
                     </div>
                 </div>
             `
@@ -158,6 +160,33 @@ function get_swarm_data() {
             container.innerHTML = html;
         }
     })
+}
+
+function add_nodes() {
+    const csrftoken = getCookie('csrftoken')
+    container = document.getElementById('swarm_setup')
+    container.innerHTML = "<p>Adding Nodes</p>"
+    $.ajax({
+        url: "/swarman/api/swarms/add_existing_swarm_nodes",
+        method: "POST",
+        dataType: "json",
+        data: {
+            "swarm_address": swarm_address,
+            "swarm_id": swarm_id,
+        },
+        headers: {"X-CSRFToken": csrftoken },
+        success: function(data) {
+            //Success function happens here
+            container.innerHTML = "<p>All Nodes Added Successfully!</p>"
+            
+        },
+        error: function(data) {
+            // If Response Fails
+            container.innerHTML = "<p>ERROR</p>"
+        }
+    })
+
+    console.log(nodes)
 }
 
 
