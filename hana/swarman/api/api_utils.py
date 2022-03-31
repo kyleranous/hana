@@ -1,3 +1,4 @@
+from tempfile import TemporaryFile
 from tkinter import N
 import requests
 import json
@@ -29,3 +30,14 @@ def get_existing_node_info(swarm_ip):
         return {'error' : f'Error connecting to {url}'}
     
 
+def get_swarm_tokens(swarm_ip):
+    try:
+        url = f'http://{swarm_ip}/swarm'
+        swarm_response = requests.get(url)
+
+        swarm_response = json.loads(swarm_response.text)
+
+        return swarm_response["JoinTokens"]
+
+    except:
+        return {'error' : f'Error connecting to {url}'}
