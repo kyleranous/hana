@@ -14,7 +14,7 @@ from . import api_utils
 
 class SwarmViewSet(viewsets.ModelViewSet):
     """
-    List all Swarms, or create a new Swarm Entry
+    List all Swarms, create a new Swarm Entry, or view Swarm Details
     """
     queryset = Swarm.objects.all()
     serializer_class = SwarmSerializer
