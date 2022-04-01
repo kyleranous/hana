@@ -108,7 +108,8 @@ def add_existing_swarm_nodes(request):
                                             role=node['role'],
                                             swarm=swarm,
                                             docker_version_index=node['docker_version_index'],
-                                            node_architecture=node['node_architecture'])
+                                            node_architecture=node['node_architecture'],
+                                            node_id=node['node_id'])
 
                     return Response({'success' : 'All Nodes Added Successfully'}, status=status.HTTP_201_CREATED)
         
