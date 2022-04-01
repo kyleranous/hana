@@ -52,19 +52,6 @@ def dashboard(request):
 def node_detail(request, node_id):
     """
     Displays Node Specific Details
-
-    Enable API on Node:
-
-    `sudo nano /lib/systemd/system/docker.service`
-    Find Line 'ExecStart=...'
-    Add '-H=tcp://0.0.0.0:2375' After 'fd://'
-
-    Restart Services
-    'sudo systemctl daemon-reload'
-    'sudo service docker restart'
-
-    *** Alternatively ***
-    sudo sed -i 's+ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock+ExecStart=/usr/bin/dockerd -H fd:// -H=tcp://0.0.0.0:2375 --containerd=/run/containerd/containerd.sock+g' /lib/systemd/system/docker.service
     """
 
     try:
