@@ -12,14 +12,6 @@ from .serializers import SwarmSerializer, NodeSerializer
 from . import api_utils
 
 
-# API Views defined here
-@api_view(['GET'])
-def api_root(request, format=None):
-    return Response({
-        'swarms': reverse('swarman:api-swarm-list', request=request, format=format),
-    })
-
-
 class SwarmViewSet(viewsets.ModelViewSet):
     """
     List all Swarms, or create a new Swarm Entry
