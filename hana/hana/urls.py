@@ -24,7 +24,7 @@ schema_view = get_schema_view(
     openapi.Info(
         title="HANA API",
         default_version='v0.1a',
-        description="Test description",
+        description="HANA API for monitoring and managing swarms and nodes",
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
