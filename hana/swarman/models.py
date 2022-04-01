@@ -70,6 +70,7 @@ class Node(models.Model):
     swarm = models.ForeignKey(Swarm, on_delete=models.CASCADE, related_name="nodes")
     docker_version_index = models.CharField(max_length=16)
     node_architecture = models.CharField(max_length=32)
+    node_id = models.CharField(max_length=200)
 
     def __str__(self):
         return self.hostname
@@ -79,6 +80,11 @@ class Node(models.Model):
             Promotes a node from worker to manager
             docker API v1.41    
         '''
+
+        # TODO:
+        # - Clean up this section to only have 1 return statement
+        # - Adjust Unit Test to retrieve mock swarm data for demote function
+
         if self.role == "Manager":
             return "Node is already a Manager"
 
@@ -86,22 +92,43 @@ class Node(models.Model):
             # Attempt to update, if communication fails,
             # Go to the next manager in the list
             for address in self.swarm.manager_ip_list():
-                url = f'http://{address}/nodes/{self.hostname}/update?version={self.docker_version_index}'
+                url = f'http://{address}/nodes/{self.node_id}/update?version={self.get_version()}'
                 
                 # post Request to swarm to promote Manager
                 request_body = {
-                    "Role": "manager"
+                    "Role": "manager",
+                    "Availability": "active"
                 }
+
+                response = requests.post(url, json=request_body)
+
                 # If Request is Successful - Update Role in database
-                self.role = "Manager"
-                self.save()
-                return "Update Successful"
+                if response.status_code == 200:
+                    version = self.get_node_info()
+                    self.role = "Manager"
+                    self.docker_version_index = version['Version']['Index']
+                    self.save()
+                    return "Update Successful"
+                elif response.status_code == 400:
+                    return "Bad Parameter"
+                elif response.status_code == 404:
+                    return "No Such Node"
+                elif response.status_code == 500:
+                    return "Server Error"
+                elif response.status_code == 503:
+                    return "Node is not part of a swarm"
+                else:
+                    return "Promoting node failed for an unknown reason"
 
     def demote(self):
         '''
             Demotes a node from a manager to a worker
             docker API v1.41
         '''
+        # TODO:
+        # - Clean up this section to only have 1 return statement
+        # - Adjust Unit Test to retrieve mock swarm data for demote function
+
         if self.role == "Worker":
             return "Node is already a Worker"
 
@@ -109,16 +136,31 @@ class Node(models.Model):
             # Attempt to update, if communication fails,
             # Go to the next manager in the list
             for address in self.swarm.manager_ip_list():
-                url = f'http://{address}/nodes/{self.hostname}/update?version={self.docker_version_index}'
+                url = f'http://{address}/nodes/{self.node_id}/update?version={self.get_version()}'
                 
                 # post Request to swarm to promote Manager
                 request_body = {
-                    "Role": "worker"
+                    "Role": "worker",
+                    "Availability": "active"
                 }
+
+                response = requests.post(url, json=request_body)
+
                 # If Request is Successful - Update Role in database
-                self.role = "Worker"
-                self.save()
-                return "Update Successful"
+                if response.status_code == 200:
+                    self.role = "Worker"
+                    self.save()
+                    return "Update Successful"
+                elif response.status_code == 400:
+                    return "Bad Parameter"
+                elif response.status_code == 404:
+                    return "No Such Node"
+                elif response.status_code == 500:
+                    return "Server Error"
+                elif response.status_code == 503:
+                    return "Node is not part of a swarm"
+                else:
+                    return "Demoting node failed for an unknown reason"
 
     def get_node_info(self):
         '''
@@ -131,7 +173,7 @@ class Node(models.Model):
         for address in self.swarm.manager_ip_list():
             url = f'http://{address}/nodes/{self.hostname}'
             node_response = requests.get(url)
-            print(type(node_response.status_code))
+            
             if node_response.status_code == 200:
                 node_data = node_response.text
                 
@@ -208,4 +250,27 @@ class Node(models.Model):
                 total_memory_load += memory_usage
 
             return float(format(total_memory_load, '.2f'))
+
+    def get_version(self):
+        '''
+            Returns the Version Index of a node
+            docker API v1.41    
+        '''
+        
+        # Get a list of all manager IPs, If a manager does not respond
+        # Try the next manager
+        for address in self.swarm.manager_ip_list():
+            url = f'http://{address}/nodes/{self.hostname}'
+            node_response = requests.get(url)
+            
+            if node_response.status_code == 200:
+                node_data = json.loads(node_response.text)
+                
+                return node_data['Version']['Index']
+
+            else:
+                pass
+
+        return None
+        
 
