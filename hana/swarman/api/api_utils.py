@@ -18,7 +18,8 @@ def get_existing_node_info(swarm_ip):
                 'hostname' : node['Description']['Hostname'],
                 'docker_version_index' : node['Version']['Index'],
                 'node_architecture' : node['Description']['Platform']['Architecture'],
-                'role' : node['Spec']['Role'].capitalize()
+                'role' : node['Spec']['Role'].capitalize(),
+                'node_id' : node['ID']
             }
             if node['Status']['Addr'] == '0.0.0.0':
                 node_data['ip_address'] = node['ManagerStatus']['Addr'].split(':')[0]
