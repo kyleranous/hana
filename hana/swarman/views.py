@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views import View
 
@@ -11,6 +11,21 @@ from .models import Swarm
 SWARM_MANAGER_URL = 'http://192.168.1.200:2375'
 
 # Create your views here.
+def swarm_dashboard(request, swarm_id):
+    """
+    Display information about a swarm. Includes node and service status
+    """
+    swarm = get_object_or_404(Swarm, id=swarm_id)
+    nodes = swarm.nodes.order_by('hostname')
+
+    context = {
+        "swarm" : swarm,
+        "nodes" : nodes,
+    }
+
+    return render(request, 'swarman/swarm_dashboard.html', context)
+
+
 def dashboard(request):
     """
     Displays information on nodes and services running on the swarm
