@@ -19,7 +19,7 @@ class Swarm(models.Model):
 
     def __str__(self):
 
-        return f'{self.swarm_name} - {self.node_count()} Node Swarm'
+        return f'{self.swarm_name} - {self.node_count} Node Swarm'
 
     def manager_join_command(self):
         '''Returns a String with the docker swarm join command and Manager Token'''
@@ -37,10 +37,12 @@ class Swarm(models.Model):
         '''Returns a QuerySet with all worker nodes assigned to a Swarm'''
         return self.nodes.filter(role='Worker').all()
 
+    @property
     def node_count(self):
         '''Returns a count of all nodes assigned to a swarm'''
         return len(self.nodes.all())
 
+    @property
     def manager_count(self):
         '''Returns a count of all manager nodes assigned to a swarm'''
         return len(self.manager_nodes())
@@ -184,6 +186,7 @@ class Node(models.Model):
 
         return None
 
+    @property
     def get_cpu_load(self):
         '''
             Calculate the current CPU load on the node, returns value as a percentage
@@ -221,6 +224,7 @@ class Node(models.Model):
         return container_json
         
 
+    @property
     def get_memory_usage(self):
         '''
             Calculate Memory Usage on a Node, returns memory usage as percentage
@@ -251,6 +255,7 @@ class Node(models.Model):
 
             return float(format(total_memory_load, '.2f'))
 
+    @property
     def get_version(self):
         '''
             Returns the Version Index of a node
@@ -273,4 +278,7 @@ class Node(models.Model):
 
         return None
         
+    @property
+    def get_status(self):
 
+        return self.get_node_info()['Status']['State']
