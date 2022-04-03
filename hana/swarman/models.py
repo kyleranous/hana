@@ -3,12 +3,8 @@ from django.db import models
 import requests
 import json
 
+
 # Create your models here.
-class SwarmService(models.Model):
-
-    name = models.CharField(max_length=32)
-
-
 class Swarm(models.Model):
     """
     Swarm Model is for multiple swarm management. This is a feature that may be implemented at a future time
@@ -282,3 +278,23 @@ class Node(models.Model):
     def get_status(self):
 
         return self.get_node_info()['Status']['State']
+
+
+class Service(models.Model):
+
+    service_name = models.CharField(max_length=64)
+    service_id = models.CharField(max_length=64)
+    swarm = models.ForeignKey(Swarm, on_delete=models.CASCADE)
+    target_port = models.IntegerField()
+    published_port = models.IntegerField()
+    desired_replicas = models.IntegerField()
+    image_name = models.CharField(max_length=64)
+    status = models.CharField()
+
+
+class Mounts(models.Model):
+
+    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+    mount_type = models.CharField(max_length=32)
+    mount_src = models.CharField(max_length=200)
+    mount_target = models.CharField(max_length=200)

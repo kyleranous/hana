@@ -8,6 +8,7 @@
     <div class="row">
         <div class="col-9">
             <div class="row">
+                <h4>Nodes</h4>
                 {% for node in nodes %}
                     <div class="col-2 text-center">
                         <p><h5><a class="link-dark" href="#">{{ node.hostname|title }}</a></h5></p>
@@ -16,6 +17,9 @@
 
                     </div>
                 {% endfor %}
+            </div>
+            <div class="row">
+                <h4>Services</h4>
             </div>
         </div>
         <div class="col-2">

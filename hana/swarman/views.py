@@ -45,6 +45,7 @@ def dashboard(request):
         
 
     service_response = requests.get(SWARM_MANAGER_URL + '/services?status=1')
+    print(SWARM_MANAGER_URL + '/services?status=1')
     service_data = service_response.text
     service_json = json.loads(service_data)
     services = []
