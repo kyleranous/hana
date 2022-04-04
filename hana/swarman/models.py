@@ -2,6 +2,7 @@ from django.db import models
 
 import requests
 import json
+import docker
 
 
 # Create your models here.
@@ -76,11 +77,9 @@ class Node(models.Model):
     def promote(self):
         '''
             Promotes a node from worker to manager
-            docker API v1.41    
         '''
 
         # TODO:
-        # - Clean up this section to only have 1 return statement
         # - Adjust Unit Test to retrieve mock swarm data for demote function
 
         if self.role == "Manager":
@@ -90,41 +89,29 @@ class Node(models.Model):
             # Attempt to update, if communication fails,
             # Go to the next manager in the list
             for address in self.swarm.manager_ip_list():
-                url = f'http://{address}/nodes/{self.node_id}/update?version={self.get_version()}'
-                
+
+                client = docker.DockerClient(base_url=f'tcp://{address}')
+
+                node = client.nodes.get(self.hostname)
                 # post Request to swarm to promote Manager
-                request_body = {
+                node_spec = {
                     "Role": "manager",
                     "Availability": "active"
                 }
 
-                response = requests.post(url, json=request_body)
-
-                # If Request is Successful - Update Role in database
-                if response.status_code == 200:
-                    version = self.get_node_info()
+                if node.update(node_spec):
                     self.role = "Manager"
-                    self.docker_version_index = version['Version']['Index']
                     self.save()
+                    client.close()
                     return "Update Successful"
-                elif response.status_code == 400:
-                    return "Bad Parameter"
-                elif response.status_code == 404:
-                    return "No Such Node"
-                elif response.status_code == 500:
-                    return "Server Error"
-                elif response.status_code == 503:
-                    return "Node is not part of a swarm"
-                else:
-                    return "Promoting node failed for an unknown reason"
+
+            return "Update Failed"
 
     def demote(self):
         '''
             Demotes a node from a manager to a worker
-            docker API v1.41
         '''
         # TODO:
-        # - Clean up this section to only have 1 return statement
         # - Adjust Unit Test to retrieve mock swarm data for demote function
 
         if self.role == "Worker":
@@ -134,145 +121,96 @@ class Node(models.Model):
             # Attempt to update, if communication fails,
             # Go to the next manager in the list
             for address in self.swarm.manager_ip_list():
-                url = f'http://{address}/nodes/{self.node_id}/update?version={self.get_version()}'
-                
+                client = docker.DockerClient(base_url=f'tcp://{address}')
+
+                node = client.nodes.get(self.hostname)
                 # post Request to swarm to promote Manager
-                request_body = {
+                node_spec = {
                     "Role": "worker",
                     "Availability": "active"
                 }
 
-                response = requests.post(url, json=request_body)
-
-                # If Request is Successful - Update Role in database
-                if response.status_code == 200:
+                if node.update(node_spec):
                     self.role = "Worker"
                     self.save()
+                    client.close()
                     return "Update Successful"
-                elif response.status_code == 400:
-                    return "Bad Parameter"
-                elif response.status_code == 404:
-                    return "No Such Node"
-                elif response.status_code == 500:
-                    return "Server Error"
-                elif response.status_code == 503:
-                    return "Node is not part of a swarm"
-                else:
-                    return "Demoting node failed for an unknown reason"
+
+            return "Update Failed" 
+                
 
     def get_node_info(self):
         '''
-            Returns a JSON object with node information from Docker API
-            docker API v1.41    
+            Returns a JSON object with node information from Docker API   
         '''
 
-        # Get a list of all manager IPs, If a manager does not respond
-        # Try the next manager
         for address in self.swarm.manager_ip_list():
-            url = f'http://{address}/nodes/{self.hostname}'
-            node_response = requests.get(url)
             
-            if node_response.status_code == 200:
-                node_data = node_response.text
-                
-                return json.loads(node_data)
+            try:
+                client = docker.DockerClient(base_url=f'tcp://{address}')
 
-            else:
+                node_data = client.nodes.get(self.hostname).attrs
+                client.close()
+                return node_data
+
+            except Exception as err: 
                 pass
 
-        return None
+        return err
 
     @property
     def get_cpu_load(self):
         '''
             Calculate the current CPU load on the node, returns value as a percentage
             Returns float
-            docker API v1.41
         '''
 
-        container_response = requests.get(f'http://{self.ip_address}:{self.api_port}/containers/json')
-        container_json = json.loads(container_response.text)
-
+        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
         total_cpu_load = 0
 
-        for container in container_json:
-            id = container['Id']
-            container_info = self.get_container_info(id)
-
+        for container in client.containers.list():
+            
+            container_info = container.stats(stream=False)
             cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - container_info['precpu_stats']['cpu_usage']['total_usage']
             system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - container_info['precpu_stats']['system_cpu_usage']
             number_cpus = container_info['cpu_stats']['online_cpus']
             cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
             total_cpu_load += cpu_usage
 
+        client.close()
         return float(format(total_cpu_load, '.2f'))
 
 
     def get_container_info(self, container_id):
         '''
             Get the container info from a node
-            docker API v1.41    
         '''
-        
-        container_response = requests.get(f'http://{self.ip_address}:{self.api_port}/containers/{container_id}/stats?stream=0')
-        container_json = json.loads(container_response.text)
+        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
 
-        return container_json
+        return client.services.get(container_id).attrs
         
-
     @property
     def get_memory_usage(self):
         '''
             Calculate Memory Usage on a Node, returns memory usage as percentage
             Returns Float
-            docker API v1.41
         '''
-        # Check to see if node is armv71
-        if self.node_architecture == "armv7l":
-            return "Operation not supported on armv71 architecture"
-        # Otherwise calculate memory usage on node
-        else:
+        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
 
-            container_response = requests.get(f'http://{self.ip_address}:{self.api_port}/containers/json')
-            container_json = json.loads(container_response.text)
+        total_memory_load = 0
+        # Loop through all containers returned in container JSON
+        # and calculate memory usage
+        for container in client.containers.list():
 
-            total_memory_load = 0
-            # Loop through all containers returned in container JSON
-            # and calculate memory usage
-            for container in container_json:
+            container_info = container.stats(stream=False)
 
-                id = container['Id']
-                container_info = self.get_container_info(id)
-
-                used_memory = container_info['memory_stats']['usage'] - container_info['memory_stats']['stats']['cache']
-                available_memory = container_info['memory_stats']['limit']
-                memory_usage = (used_memory / available_memory) * 100.0
-                total_memory_load += memory_usage
-
-            return float(format(total_memory_load, '.2f'))
-
-    @property
-    def get_version(self):
-        '''
-            Returns the Version Index of a node
-            docker API v1.41    
-        '''
+            used_memory = container_info['memory_stats']['usage']
+            available_memory = container_info['memory_stats']['limit']
+            memory_usage = (used_memory / available_memory) * 100.0
+            total_memory_load += memory_usage
         
-        # Get a list of all manager IPs, If a manager does not respond
-        # Try the next manager
-        for address in self.swarm.manager_ip_list():
-            url = f'http://{address}/nodes/{self.hostname}'
-            node_response = requests.get(url)
-            
-            if node_response.status_code == 200:
-                node_data = json.loads(node_response.text)
-                
-                return node_data['Version']['Index']
-
-            else:
-                pass
-
-        return None
+        client.close()
+        return float(format(total_memory_load, '.2f'))
         
     @property
     def get_status(self):
