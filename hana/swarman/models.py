@@ -241,6 +241,39 @@ class Node(models.Model):
 
         return self.get_node_info()['Status']['State']
 
+    @property
+    def utilization(self):
+        """
+        Calculates the total CPU and memory utalization by services on the node as a percentage.
+        Returns a Tupple (cpu_utilization, memory_utilization)
+        """
+        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
+
+        total_memory_load = 0
+        total_cpu_load = 0
+        # Loop through all containers returned in container JSON
+        # and calculate memory and cpu usage
+        for container in client.containers.list():
+
+            container_info = container.stats(stream=False)
+            # Calculate Memory Usage per container   
+            used_memory = container_info['memory_stats']['usage']
+            available_memory = container_info['memory_stats']['limit']
+            memory_usage = (used_memory / available_memory) * 100.0
+            total_memory_load += memory_usage
+
+            #Calculate CPU Usage per container
+            cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - container_info['precpu_stats']['cpu_usage']['total_usage']
+            system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - container_info['precpu_stats']['system_cpu_usage']
+            number_cpus = container_info['cpu_stats']['online_cpus']
+            cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
+            total_cpu_load += cpu_usage
+        
+
+        client.close()
+        utilization = (float(format(total_cpu_load, '.2f'), float(format(total_memory_load, '.2f'))))
+        return utilization
+
 
 class Service(models.Model):
 
