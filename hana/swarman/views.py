@@ -18,9 +18,23 @@ def swarm_dashboard(request, swarm_id):
     swarm = get_object_or_404(Swarm, id=swarm_id)
     nodes = swarm.nodes.order_by('hostname')
 
+    services = []
+
+    for service in swarm.get_services():
+        service_info = {
+            'name' : service['Spec']['Name'],
+            'ID' : service['ID'],
+            'image' : service['TaskTemplate']['ContainerSpec']['Image'].split('@')[0],
+            'replicas' : service['Mode']['Replicated']['Replicas'],
+            'target_port' : service['Ports']['TargetPort'],
+            'published_port' : service['Ports']['PublishedPort'],
+
+        }
+        services.append(service_info)
     context = {
         "swarm" : swarm,
         "nodes" : nodes,
+        "services" : services,
     }
 
     return render(request, 'swarman/swarm_dashboard.html', context)
