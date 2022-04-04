@@ -13,6 +13,8 @@
                     <div class="col-2 text-center">
                         <p><h5><a class="link-dark" href="#">{{ node.hostname|title }}</a></h5></p>
                         <p>{{ node.role }}</p>
+                        <p>CPU: <span id="{{ node.hostame }}-cpu">-%</span><br>
+                        Memory: <span id="{{ node.hostname }}-memory">-%</span></p>
                         <p><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="{% if node.get_status == 'ready' %}green{% else %}red{% endif %}" class="bi bi-circle-fill" viewbox="0 0 10 10"><circle cx="5" cy="5" r="5" /></svg> {{ node.get_status|title }}
 
                     </div>
@@ -21,12 +23,33 @@
             <div class="row">
                 <h4>Services</h4>
             </div>
+            <div class="row">
+                {% for service in services %}
+                    <div class="col-5 text-center align-self-center" style="border: solid; margin: 5px;">
+                        <h5><a class="link-dark" href="#">{{ service.name|title }}</a></h5>
+                        {% if service.desired_tasks == 0 %}
+                            <span style="color: orange;"><strong>PAUSED</strong></span> 
+                        {% elif 0 < service.replicas and service.replicas < service.desired_tasks %}
+                            <span style="color: #B25F4A;"><strong>DEGRADED</strong></span>
+                        {% elif service.replicas == 0 and service.desired_tasks > 0 %}
+                            <span style="color: red;"><strong>ERROR</strong></span>
+                        {% else %}
+                            <span style="color: green;"><strong>RUNNING</strong></span>
+                        {% endif %}
+                        <p>ID: {{ service.ID }}<br>
+                        Image: {{ service.image }}<br>
+                        Port: {{ service.published_port }} / {{ service.target_port }}<br>
+                        Replicas: {{ service.replicas }} / {{ service.desired_tasks }}<br>
+
+                    </div>
+                {% endfor %}
+            </div>
         </div>
         <div class="col-2">
             <p>Swarm Status: </p>
             <p>Manager Count: {{ swarm.manager_count }}</p>
             <p>Node Count: {{ swarm.node_count }}</p>
-            <p>Services: </p>
+            <p>Services: {{ swarm.services_count }}</p>
         </div>
     </div>
 
