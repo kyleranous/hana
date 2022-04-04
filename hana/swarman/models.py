@@ -57,6 +57,21 @@ class Swarm(models.Model):
 
         return addresses
 
+    def get_services(self):
+        '''
+        Return a list of services running on a swarm
+        '''
+        for ip_address in self.manager_ip_list():
+            client = docker.DockerClient(base_url=f'tcp://{ip_address}')
+
+            services = []
+
+            for service in client.services.list():
+                services.append(service.attrs)
+
+            print(services)
+            return services
+
 
 class Node(models.Model):
     """
@@ -227,7 +242,7 @@ class Service(models.Model):
     published_port = models.IntegerField()
     desired_replicas = models.IntegerField()
     image_name = models.CharField(max_length=64)
-    status = models.CharField()
+    status = models.CharField(max_length=64)
 
 
 class Mounts(models.Model):
