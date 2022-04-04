@@ -2,43 +2,43 @@ from tempfile import TemporaryFile
 from tkinter import N
 import requests
 import json
+import docker
 
 
 def get_existing_node_info(swarm_ip):
+
     try:
-        url = f'http://{swarm_ip}/nodes?membership=accepted'
-        node_response = requests.get(url)
-    
-        nodes_json = json.loads(node_response.text)
+        client = docker.DockerClient(base_url=f'tcp://{swarm_ip}')
+
         parsed_nodes_json = {
             'nodes' : [],
         }
-        for node in nodes_json:
+        for node in client.nodes.list():
             node_data = {
-                'hostname' : node['Description']['Hostname'],
-                'docker_version_index' : node['Version']['Index'],
-                'node_architecture' : node['Description']['Platform']['Architecture'],
-                'role' : node['Spec']['Role'].capitalize(),
-                'node_id' : node['ID']
+                'hostname' : node.attrs['Description']['Hostname'],
+                'docker_version_index' : node.attrs['Version']['Index'],
+                'node_architecture' : node.attrs['Description']['Platform']['Architecture'],
+                'role' : node.attrs['Spec']['Role'].capitalize(),
+                'node_id' : node.attrs['ID']
             }
-            if node['Status']['Addr'] == '0.0.0.0':
-                node_data['ip_address'] = node['ManagerStatus']['Addr'].split(':')[0]
+            if node.attrs['Status']['Addr'] == '0.0.0.0':
+                node_data['ip_address'] = node.attrs['ManagerStatus']['Addr'].split(':')[0]
             else:
-                node_data['ip_address'] = node['Status']['Addr']
+                node_data['ip_address'] = node.attrs['Status']['Addr']
             parsed_nodes_json['nodes'].append(node_data)
+
+        client.close()
+
         return parsed_nodes_json
     except:
-        return {'error' : f'Error connecting to {url}'}
+        return {'error' : f'Error connecting to {swarm_ip}'}
     
 
 def get_swarm_tokens(swarm_ip):
-    try:
-        url = f'http://{swarm_ip}/swarm'
-        swarm_response = requests.get(url)
 
-        swarm_response = json.loads(swarm_response.text)
+    client = docker.DockerClient(base_url=f'tcp://{swarm_ip}')
+    join_tokens = client.swarm.attrs['JoinTokens']
+    client.close()
 
-        return swarm_response["JoinTokens"]
-
-    except:
-        return {'error' : f'Error connecting to {url}'}
+    return join_tokens
+    
