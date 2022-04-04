@@ -3,6 +3,8 @@ Script to test the ammount of time it takes to collect resource usage stats on a
 """
 
 import time
+import sys
+import docker
 
 from swarman.models import Node
 
@@ -12,9 +14,15 @@ from swarman.models import Node
 nodes = Node.objects.all()
 test_nodes = []
 for node in nodes:
-
-    if node.get_container_info() is not None:
+    client = docker.DockerClient(base_url=f'tcp://{node.ip_address}:{node.api_port}')
+    if client.containers.list():
         test_nodes.append(node)
+    client.close()
+
+
+if len(test_nodes) == 0:
+    print("There are no Nodes that can be used for this test.")
+    exit()
 
 
 # Test current Method with 2 functions and 2 API Calls
