@@ -23,7 +23,7 @@ from drf_yasg import openapi
 schema_view = get_schema_view(
     openapi.Info(
         title="HANA API",
-        default_version='v0.1a',
+        default_version='v1.0a',
         description="HANA API for monitoring and managing swarms and nodes",
     ),
     public=True,
