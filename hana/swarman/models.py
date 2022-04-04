@@ -81,7 +81,6 @@ class Node(models.Model):
     def promote(self):
         '''
             Promotes a node from worker to manager
-            docker API v1.41    
         '''
 
         # TODO:
@@ -115,7 +114,6 @@ class Node(models.Model):
     def demote(self):
         '''
             Demotes a node from a manager to a worker
-            docker API v1.41
         '''
         # TODO:
         # - Adjust Unit Test to retrieve mock swarm data for demote function
@@ -147,8 +145,7 @@ class Node(models.Model):
 
     def get_node_info(self):
         '''
-            Returns a JSON object with node information from Docker API
-            docker API v1.41    
+            Returns a JSON object with node information from Docker API   
         '''
 
         for address in self.swarm.manager_ip_list():
@@ -170,7 +167,6 @@ class Node(models.Model):
         '''
             Calculate the current CPU load on the node, returns value as a percentage
             Returns float
-            docker API v1.41
         '''
 
         client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
@@ -192,21 +188,16 @@ class Node(models.Model):
     def get_container_info(self, container_id):
         '''
             Get the container info from a node
-            docker API v1.41    
         '''
-        
-        container_response = requests.get(f'http://{self.ip_address}:{self.api_port}/containers/{container_id}/stats?stream=0')
-        container_json = json.loads(container_response.text)
+        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
 
-        return container_json
+        return client.services.get(container_id).attrs
         
-
     @property
     def get_memory_usage(self):
         '''
             Calculate Memory Usage on a Node, returns memory usage as percentage
             Returns Float
-            docker API v1.41
         '''
         client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
 
@@ -224,29 +215,6 @@ class Node(models.Model):
         
         client.close()
         return float(format(total_memory_load, '.2f'))
-
-    @property
-    def get_version(self):
-        '''
-            Returns the Version Index of a node
-            docker API v1.41    
-        '''
-        
-        # Get a list of all manager IPs, If a manager does not respond
-        # Try the next manager
-        for address in self.swarm.manager_ip_list():
-            url = f'http://{address}/nodes/{self.hostname}'
-            node_response = requests.get(url)
-            
-            if node_response.status_code == 200:
-                node_data = json.loads(node_response.text)
-                
-                return node_data['Version']['Index']
-
-            else:
-                pass
-
-        return None
         
     @property
     def get_status(self):
