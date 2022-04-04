@@ -62,16 +62,25 @@ class Swarm(models.Model):
         Return a list of services running on a swarm
         '''
         for ip_address in self.manager_ip_list():
-            client = docker.DockerClient(base_url=f'tcp://{ip_address}')
+            #client = docker.DockerClient(base_url=f'tcp://{ip_address}')
+            url = f'http://{ip_address}/services?status=true'
+            response = requests.get(url)
 
-            services = []
+            if response.status_code == 200:
+                service_list = response.json
+                services = []
 
-            for service in client.services.list():
-                services.append(service.attrs)
+                for service in service_list():
+                    services.append(service)
 
-            print(services)
-            return services
+                return services
 
+    @property
+    def services_count(self):
+        '''
+        Return a count of services running on a swarm
+        '''
+        return len(self.get_services())
 
 class Node(models.Model):
     """
