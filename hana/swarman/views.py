@@ -24,11 +24,11 @@ def swarm_dashboard(request, swarm_id):
         service_info = {
             'name' : service['Spec']['Name'],
             'ID' : service['ID'],
-            'image' : service['TaskTemplate']['ContainerSpec']['Image'].split('@')[0],
-            'replicas' : service['Mode']['Replicated']['Replicas'],
-            'target_port' : service['Ports']['TargetPort'],
-            'published_port' : service['Ports']['PublishedPort'],
-
+            'image' : service['Spec']['TaskTemplate']['ContainerSpec']['Image'].split('@')[0],
+            'replicas' : service['Spec']['Mode']['Replicated']['Replicas'],
+            'desired_tasks' : service['ServiceStatus']['DesiredTasks'],
+            'target_port' : service['Endpoint']['Ports'][0]['TargetPort'],
+            'published_port' : service['Endpoint']['Ports'][0]['PublishedPort'],
         }
         services.append(service_info)
     context = {
