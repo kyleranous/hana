@@ -1,8 +1,10 @@
 from django.db import models
+from django.utils.html import format_html
 
 import requests
 import json
 import docker
+import time
 
 
 # Create your models here.
@@ -253,6 +255,7 @@ class Node(models.Model):
         total_cpu_load = 0
         # Loop through all containers returned in container JSON
         # and calculate memory and cpu usage
+        
         for container in client.containers.list():
 
             container_info = container.stats(stream=False)
@@ -260,6 +263,7 @@ class Node(models.Model):
             used_memory = container_info['memory_stats']['usage']
             available_memory = container_info['memory_stats']['limit']
             memory_usage = (used_memory / available_memory) * 100.0
+            
             total_memory_load += memory_usage
 
             #Calculate CPU Usage per container
@@ -271,8 +275,18 @@ class Node(models.Model):
         
 
         client.close()
-        utilization = (float(format(total_cpu_load, '.2f'), float(format(total_memory_load, '.2f'))))
+        utilization = (float(format(total_cpu_load, '.2f')), float(format(total_memory_load, '.2f')))
         return utilization
+
+    @property
+    def utilization_display(self):
+
+        result = self.utilization
+        
+        return format_html("{}<br>{}",
+                           f"CPU: {result[0]}%",
+                           f"Memory: {result[1]}%")
+                         
 
 
 class Service(models.Model):

@@ -31,6 +31,7 @@ def swarm_dashboard(request, swarm_id):
             'published_port' : service['Endpoint']['Ports'][0]['PublishedPort'],
         }
         services.append(service_info)
+
     context = {
         "swarm" : swarm,
         "nodes" : nodes,
