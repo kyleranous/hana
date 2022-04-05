@@ -4,6 +4,7 @@ from django.views import View
 
 import requests
 import json
+import docker
 
 from .models import Swarm, Node
 
@@ -84,10 +85,22 @@ def node_detail(request, node_id):
     """
     Displays Node Specific Details
     """
+    # Get Node Object
     node = get_object_or_404(Node, id=node_id)
 
+    # Get Container List
+    try:
+        #client = docker.DockerClient(base_url=f'tcp://{node.ip_address}:{node.api_port}')
+        #containers = client.containers.list()
+        containers = [{"Names":["/boring_feynman"], "Image": "ubuntu:latest", "Mounts": [{"Name": "test", "Source": "/data", "Destination" : "/data"}]},
+                      {"Names":["/boring_feynman"], "Image": "ubuntu:latest", "Mounts": [{"Name": "test", "Source": "/data", "Destination" : "/data"}]}]
+    except:
+        containers = [{"error" : "Error retrieving containers"}]
+
+    
     context = {
         'node' : node,
+        'containers': containers,
     }
 
     return render(request, 'swarman/node_detail.html', context)
