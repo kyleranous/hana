@@ -3,23 +3,118 @@
 {% block content %}
 
 <div class="container">
-    <div class="row">
-        <div class="col-9">
-            Node Details
+    <div class="row" style="padding-bottom: 20px">
+        <div class='col' style="padding-top: 10px;">
+        <a class="btn btn-outline-primary" href="{% url 'swarman:swarm-dashboard' node.swarm.id %}">Back to Swarm</a>
         </div>
-        <div class="col-3">
-            Node Actions
-            <ul>
-                <li>Promote / Demote Node</li>
-                <li>Pause Node - No New Tasks assigned to node</li>
-                <li>Drain Node - No New Tasks, Current Tasks are stopped and moved to other nodes</li>
-                <li>Activate Node - Available if Node is Paused or Drain State</li>
-                <li>Leave Swarm</li>
-
-                
-
+    </div>
+    <div class="row">
+        <div class="col-md">
+            <div class="row">
+                <div class="col">
+                    <h5>{{ node.hostname|title }} Details</h5>
+                        <p>
+                             <!-- Live Data - Get from JS -->
+                            Status - Availability
+                        </p>
+                        <p>
+                            <strong>Utilization</strong><br>
+                            <!-- Live Data - Get from JS -->
+                            <span id="node_utilization">
+                                CPU: --%<br>
+                                Memory: --%
+                            </span>
+                        </p>
+                        <p>
+                            <strong>ID:</strong> {{ node.node_id }} <br>
+                            <strong>Role:</strong> {{ node.role }} - Leader? <br>
+                            <strong>IP Address:</strong> {{ node.ip_address }} <br>
+                            <strong>Architecture:</strong> {{ node.node_architecture }} <br>
+                            <strong>OS:</strong> {{ node.os }} <br>
+                            <strong>CPU Count:</strong> {{ node.cpu_count }} <br>
+                            <strong>Total Memory:</strong> {{ node.total_memory }} <br>
+                            <strong>Docker Engine Version:</strong> {{ node.docker_engine }}
+                        </p>
+                        
+                </div>
+            </div>
+        
+            <div class="row">
+                <div class="col">
+                <h5>Containers</h5>
+                {% if containers %}
+                    {% for container in containers %}
+                        {% if container.error %}
+                                {{ container.error }}
+                        {% else %}
+                                <div class="card" style="max-width: 20em; margin-bottom: 10px;">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ container.Names.0 }}</h6>
+                                        <p class="card-text">
+                                            Image: {{ container.Image }}<br>
+                                            
+                                            CPU Utilization: <span id="{{ container.Names.0 }}-cpu">--%</span><br>
+                                            Memory Utilization: <span id="{{ container.Names.0 }}-cpu">--%</span><br>
+                                        </p>
+                                    </div>
+                                </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                No Containers Running on {{ node.hostname }}
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3 text-center">
+            <h5>Node Actions</h5>
+                <div class="row" style="padding-top: 10px;">
+                    <button type="button" class="btn btn-secondary">Update Node</button>
+                </div>
+                <div class="row" style="padding-top: 10px; padding-bottom: 20px;">
+                {% if node.role == "Worker" %}
+                    <button type="button" class="btn btn-secondary">Promote Node</button>
+                {% else %}
+                    <button type="button" class="btn btn-secondary">Demote Node</button>
+                {% endif %}
+                </div>
+                <!-- Live Data - Get from JS The Availability Buttons should be populated by Javascript -->
+                {% if node.get_availability == "Error" %}
+                    Can not get Node Availability
+                {% else %}
+                    {% if node.get_availability != "active" %}
+                    <div class="row" style="padding-top: 10px;">
+                        <button type="button" class="btn btn-success">Activate Node</button>
+                    </div>
+                    {% endif %}
+                    {% if node.get_availability != "pause" %}
+                    <div class="row" style="padding-top: 10px;">
+                        <button type="button" class="btn btn-warning">Pause Node</button>
+                    </div>
+                    {% endif %}
+                    {% if node.get_availability != "drain" %}
+                    <div class="row" style="padding-top: 10px;">
+                        <button type="button" class="btn btn-warning">Drain Node</button>
+                    </div>
+                    {% endif %}
+                {% endif %}
+                <div class="row" style="padding-top: 30px;">
+                    <button type="button" class="btn btn-danger">Leave Swarm</button>
+                </div>
             </ul>
         </div>
     </div>
 </div>
+
+<script language='javascript'>
+function get_container_utilization() {
+    // This function will hit an endpoint that pulls from all the containers
+    // And pulls the information for each container then sums the totals
+    // And populates the Nodes total usage
+    
+    //Poll an API Endpoint
+}
+
+window.onload = get_container_utilization()
+</script>
 {% endblock %}
