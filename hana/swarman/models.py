@@ -92,10 +92,14 @@ class Node(models.Model):
     ip_address = models.GenericIPAddressField(blank=True, null=True, unique=True)
     api_port = models.CharField(max_length=5)
     role = models.CharField(max_length=16)
-    swarm = models.ForeignKey(Swarm, on_delete=models.CASCADE, related_name="nodes")
+    swarm = models.ForeignKey(Swarm, null=True, on_delete=models.CASCADE, related_name="nodes")
     docker_version_index = models.CharField(max_length=16)
     node_architecture = models.CharField(max_length=32)
     node_id = models.CharField(max_length=200)
+    total_memory = models.FloatField(default = 0)
+    cpu_count = models.IntegerField(default = 0)
+    os = models.CharField(max_length = 32, default="Unknown")
+    docker_engine = models.CharField(max_length=16, default="Unknown")
 
     def __str__(self):
         return self.hostname
@@ -129,9 +133,9 @@ class Node(models.Model):
                     self.role = "Manager"
                     self.save()
                     client.close()
-                    return "Update Successful"
+                    return True
 
-            return "Update Failed"
+            return False
 
     def demote(self):
         '''
@@ -160,9 +164,9 @@ class Node(models.Model):
                     self.role = "Worker"
                     self.save()
                     client.close()
-                    return "Update Successful"
+                    return True
 
-            return "Update Failed" 
+            return False 
                 
 
     def get_node_info(self):
@@ -245,8 +249,13 @@ class Node(models.Model):
 
     @property
     def get_availability(self):
-
-        return self.get_node_info()['Spec']['Availability']
+        # THIS NEEDS TO BE REMOVED BEFORE PUSH
+        return 'active'
+        try:
+            result = self.get_node_info()['Spec']['Availability']
+            return result
+        except:
+            return 'Error'
 
     @property
     def utilization(self):
@@ -285,15 +294,61 @@ class Node(models.Model):
 
     @property
     def utilization_display(self):
-
-        result = self.utilization
+        try:
+            result = self.utilization
         
-        return format_html("{}<br>{}",
-                           f"CPU: {result[0]}%",
-                           f"Memory: {result[1]}%")
+            return format_html("{}<br>{}",
+                               f"CPU: {result[0]}%",
+                               f"Memory: {result[1]}%")
+        except:
+            return "Error retreiving node utilization stats"
                          
+    def leave_swarm(self):
+        client = docker.DockerClient(base_url=f"tcp://{self.ip_address}:{self.api_port}")
 
+        if client.swarm.leave():
+            self.swarm = None
+            self.role = "NO SWARM"
+            self.save()
+            return True
 
+        return False
+
+    
+    def utilization_per_container(self):
+        """
+        Calculates the total CPU and memory utalization by containers on the node as a percentage.
+        Returns a list of dictionaries with container name, cpu, and memory utilization
+        """
+        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
+
+        
+        # Loop through all containers returned in container JSON
+        # and calculate memory and cpu usage
+        utilization_data = []
+        for container in client.containers.list():
+            container_utilization = {}
+            container_info = container.stats(stream=False)
+            container_utilization['name'] = container.attrs['Name'][0]
+
+            # Calculate Memory Usage per container   
+            used_memory = container_info['memory_stats']['usage']
+            available_memory = container_info['memory_stats']['limit']
+            memory_usage = (used_memory / available_memory) * 100.0
+            container_utilization['memory'] = float(format(memory_usage, '.2f'))
+            
+
+            #Calculate CPU Usage per container
+            cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - container_info['precpu_stats']['cpu_usage']['total_usage']
+            system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - container_info['precpu_stats']['system_cpu_usage']
+            number_cpus = container_info['cpu_stats']['online_cpus']
+            cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
+            container_utilization['cpu'] = float(format(cpu_usage, '.2f'))
+            utilization_data.append(container_utilization)
+
+        client.close()
+       
+        return utilization_data
 class Service(models.Model):
 
     service_name = models.CharField(max_length=64)
