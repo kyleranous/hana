@@ -3,39 +3,23 @@
 {% block content %}
 
 <div class="container">
-    {% if error %}
-        {{ error }}
-    {% else %}
-        Hostname: {{ hostname }}<br>
-        Role: {{ role }}<br>
-        Status: {{ availability }}<br>
-        Architecture: {{ architecture }}<br>
-        OS: {{ os }}<br>
-        IP Address: {{ ip_address }}<br>
-        Total Cores: {{ cores }}<br>
-        Memory Usage / Total: {{ total_memory_usage }}% / {{ memory }}GB<br>
-        CPU Usage: {{ total_cpu_usage }}%<br>
-        Containers: 
-        {% if container_stats %}
-        <ul>
-            {% for container in container_stats %}
-                <li>{{ container.0 }}
-                    <ul>
-                        <li>CPU Usage: {{ container.1 }}%</li>
-                        <li>Memory Usage: {{ container.2 }}%</li>
-                    </ul>
-                </li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        No Containers running on node
-        {% endif %}
-    {% endif %}
-</div>
+    <div class="row">
+        <div class="col-9">
+            Node Details
+        </div>
+        <div class="col-3">
+            Node Actions
+            <ul>
+                <li>Promote / Demote Node</li>
+                <li>Pause Node - No New Tasks assigned to node</li>
+                <li>Drain Node - No New Tasks, Current Tasks are stopped and moved to other nodes</li>
+                <li>Activate Node - Available if Node is Paused or Drain State</li>
+                <li>Leave Swarm</li>
 
-{% if not error %}
-<script>
-    
-</script>
-{% endif %}
+                
+
+            </ul>
+        </div>
+    </div>
+</div>
 {% endblock %}
