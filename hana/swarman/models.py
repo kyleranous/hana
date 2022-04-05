@@ -244,6 +244,11 @@ class Node(models.Model):
         return self.get_node_info()['Status']['State']
 
     @property
+    def get_availability(self):
+
+        return self.get_node_info()['Spec']['Availability']
+
+    @property
     def utilization(self):
         """
         Calculates the total CPU and memory utalization by services on the node as a percentage.
