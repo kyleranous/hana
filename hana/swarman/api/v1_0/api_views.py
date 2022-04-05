@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view, action
@@ -107,3 +108,56 @@ def add_existing_swarm_nodes(request):
         
             return Response({'error': "Field is Required"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'error': "swarm_id is Required"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def leave_swarm(request, node_id):
+    """
+    Node Leaves a Swarm. Node remains in the database
+    and can be re-added to another swarm. Swarm will still
+    list the node, however will not assisgn tasks.
+    """
+    node = get_object_or_404(Node, pk=node_id)
+
+    if node.leave_swarm():
+        return Response(json.dumps({'success': 'Node left swarm'}), status=status.HTTP_200_OK)
+    
+    return Response({'error': 'Node did not leave swarm'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def promote_node(request, node_id):
+    """
+    Promotes a node to manager if able
+    """
+    node = get_object_or_404(Node, node_id)
+
+    if node.promote():
+        return Response(json.dumps({'success': 'Node Promoted Successfully'}), status=status.HTTP_200_OK)
+
+    return Response({'error': 'Node was not promoted'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def demote_node(request, node_id):
+    """
+    Demotes a node to worker if able
+    """
+    node = get_object_or_404(Node, node_id)
+
+    if node.demote():
+        return Response(json.dumps({'success': 'Node Demoted Successfully'}), status=status.HTTP_200_OK)
+
+    return Response({'error': 'Node was not Demoted'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def node_utilization(request, node_id):
+    """
+    Polls a Node and gets the resource utilization of each container running on the node
+    Returns a Dictionary with Container Name, CPU Utilization, and Memory Utilization
+    """
+
+    node = get_object_or_404(Node, node_id)
+
+    return Response(node.utilization_per_container(), status=status.HTTP_200_OK)
