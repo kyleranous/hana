@@ -11,7 +11,7 @@
                 <h4>Nodes</h4>
                 {% for node in nodes %}
                     <div class="col-2 text-center">
-                        <p><h5><a class="link-dark" href="{% url 'swarman:node_detail' node.id %}">{{ node.hostname|title }}</a></h5></p>
+                        <p><h5><a class="link-dark" href="{% url 'swarman:node-detail' node.id %}">{{ node.hostname|title }}</a></h5></p>
                         <p>{{ node.get_availability|title }}</p>
                         <p>{{ node.role }}</p>
                         <p><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="{% if node.get_status == 'ready' %}green{% else %}red{% endif %}" class="bi bi-circle-fill" viewbox="0 0 10 10"><circle cx="5" cy="5" r="5" /></svg> {{ node.get_status|title }}
