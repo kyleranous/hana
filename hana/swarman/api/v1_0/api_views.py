@@ -130,7 +130,7 @@ def promote_node(request, node_id):
     """
     Promotes a node to manager if able
     """
-    node = get_object_or_404(Node, node_id)
+    node = get_object_or_404(Node, id=node_id)
 
     if node.promote():
         return Response(json.dumps({'success': 'Node Promoted Successfully'}), status=status.HTTP_200_OK)
@@ -143,7 +143,7 @@ def demote_node(request, node_id):
     """
     Demotes a node to worker if able
     """
-    node = get_object_or_404(Node, node_id)
+    node = get_object_or_404(Node, id=node_id)
 
     if node.demote():
         return Response(json.dumps({'success': 'Node Demoted Successfully'}), status=status.HTTP_200_OK)
@@ -158,6 +158,6 @@ def node_utilization(request, node_id):
     Returns a Dictionary with Container Name, CPU Utilization, and Memory Utilization
     """
 
-    node = get_object_or_404(Node, node_id)
+    node = get_object_or_404(Node, id=node_id)
 
     return Response(node.utilization_per_container(), status=status.HTTP_200_OK)
