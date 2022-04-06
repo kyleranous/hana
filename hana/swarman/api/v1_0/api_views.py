@@ -1,15 +1,22 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets
+from rest_framework import (
+    status,
+    viewsets,
+)
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
-from rest_framework.parsers import JSONParser
 
 import json
 
-from swarman.models import Swarm, Node
-from .serializers import SwarmSerializer, NodeSerializer
+from swarman.models import (
+    Swarm,
+    Node,
+)
+from .serializers import (
+    SwarmSerializer,
+    NodeSerializer,
+)
 from . import api_utils
 
 
@@ -28,8 +35,9 @@ class NodeList(APIView):
     """
     List all Nodes belonging to a swarm
     """
+
     def get(self, request, swarm_id, format=None):
-        
+
         swarm = Swarm.objects.filter(id=swarm_id).first()
         nodes = swarm.nodes.all()
 
@@ -52,7 +60,7 @@ def get_existing_swarm_nodes(request):
                 # Sanitize url to remove any attachments
                 url = request.data['swarm_address'].split('//')[-1]
                 url = url.split('/')[0]
-            
+
                 # Attempt fetch node info from swarm_address
 
                 node_data = api_utils.get_existing_node_info(url)
@@ -60,7 +68,7 @@ def get_existing_swarm_nodes(request):
                     return Response(json.dumps(node_data), status=status.HTTP_400_BAD_REQUEST)
 
                 return Response(json.dumps(node_data), status=status.HTTP_200_OK)
-        
+
         return Response({'error': "Field is Required"}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -80,7 +88,7 @@ def add_existing_swarm_nodes(request):
                     # Sanitize url to remove any attachments
                     url = request.data['swarm_address'].split('//')[-1]
                     url = url.split('/')[0]
-            
+
                     # Attempt fetch node info from swarm_address
 
                     node_data = api_utils.get_existing_node_info(url)
@@ -88,7 +96,8 @@ def add_existing_swarm_nodes(request):
                         return Response(json.dumps(node_data), status=status.HTTP_400_BAD_REQUEST)
 
                     # Add Nodes to Swarm
-                    swarm = Swarm.objects.filter(id=request.data['swarm_id']).first()
+                    swarm = Swarm.objects.filter(
+                        id=request.data['swarm_id']).first()
                     tokens = api_utils.get_swarm_tokens(url)
                     swarm.manager_join_token = tokens['Manager']
                     swarm.worker_join_token = tokens['Worker']
@@ -104,8 +113,8 @@ def add_existing_swarm_nodes(request):
                                             node_architecture=node['node_architecture'],
                                             node_id=node['node_id'])
 
-                    return Response({'success' : 'All Nodes Added Successfully'}, status=status.HTTP_201_CREATED)
-        
+                    return Response({'success': 'All Nodes Added Successfully'}, status=status.HTTP_201_CREATED)
+
             return Response({'error': "Field is Required"}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'error': "swarm_id is Required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -121,7 +130,7 @@ def leave_swarm(request, node_id):
 
     if node.leave_swarm():
         return Response(json.dumps({'success': 'Node left swarm'}), status=status.HTTP_200_OK)
-    
+
     return Response({'error': 'Node did not leave swarm'}, status=status.HTTP_400_BAD_REQUEST)
 
 
