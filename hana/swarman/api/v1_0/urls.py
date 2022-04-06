@@ -10,6 +10,7 @@ from .api_views import (
     promote_node,
     demote_node,
     node_utilization,
+    sync_node_data,
 )
 
 
@@ -39,5 +40,6 @@ urlpatterns = [
     path('nodes/<int:node_id>/utilization',
          node_utilization, name='api-node-utilization'),
     path('nodes/<int:node_id>/update', update_node_availability,
-         name='api-update-node')
+         name='api-update-node'),
+    path('nodes/<int:node_id>/sync', sync_node_data, name='api-sync-node')
 ]

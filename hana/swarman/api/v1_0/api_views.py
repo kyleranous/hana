@@ -1,5 +1,7 @@
+from click import get_binary_stream
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import (
     status,
     viewsets,
@@ -192,7 +194,8 @@ def update_node_availability(request, node_id):
 
     if request.method == 'POST':
         if "Availability" in request.data.keys():
-
+            print("*********************************")
+            print(request.data)
             if request.data['Availability'] in ('active', 'pause', 'drain'):
 
                 try:
@@ -212,5 +215,43 @@ def update_node_availability(request, node_id):
                                 status=status.HTTP_400_BAD_REQUEST)
 
         else:
-            return Response({"Error": "Invalid Availability State"},
+            return Response({"Error": "Availability is a required key"},
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def sync_node_data(request, node_id):
+    """
+    Syncs the Node entry in the database to the information pulled from the
+    docker API
+    """
+    node = get_object_or_404(Node, id=node_id)
+
+    try:
+        client = docker.DockerClient(
+            base_url=f"tcp://{node.ip_address}:{node.api_port}")
+        node_data = client.nodes.get(node.hostname).attrs
+
+        # role
+        node.role = node_data['Description']['Hostname'].title()
+        # node_architecture
+        node.node_architecture = node_data['Description']['Platform']['Architecture']
+        # node_id
+        node.node_id = node_data['ID']
+        # total_memory
+        node.total_memory = node_data['Description']['Resources']['MemoryBytes']**-9
+        # cpu_count
+        node.cpu_count = node_data['Description']['Resources']['NanoCPUs']**-9
+        # os
+        node.os = node_data['Description']['Platform']['OS']
+        # docker_engine
+        node.docker_engine = node_data['Description']['Engine']['EngineVersion']
+
+        node.save()
+
+        return Response({'Success': 'Node entry synced'},
+                        status=status.HTTP_200_OK)
+
+    except:
+        return Response({"Error": "Error connecting to node"},
+                        status=status.HTTP_504_GATEWAY_TIMEOUT)

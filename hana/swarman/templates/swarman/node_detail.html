@@ -69,7 +69,7 @@
         <div class="col-sm-3 text-center">
             <h5>Node Actions</h5>
                 <div class="row" style="padding-top: 10px;">
-                    <button type="button" class="btn btn-secondary">Sync Node Entry</button>
+                    <button type="button" class="btn btn-secondary" onclick="sync_node()">Sync Node Entry</button>
                 </div>
                 <div class="row" style="padding-top: 10px; padding-bottom: 20px;">
                 {% if node.role == "Worker" %}
@@ -84,17 +84,17 @@
                 {% else %}
                     {% if node.get_availability != "active" %}
                     <div class="row" style="padding-top: 10px;">
-                        <button type="button" class="btn btn-success">Activate Node</button>
+                        <button type="button" class="btn btn-success" onclick="update_availability('active')">Activate Node</button>
                     </div>
                     {% endif %}
                     {% if node.get_availability != "pause" %}
                     <div class="row" style="padding-top: 10px;">
-                        <button type="button" class="btn btn-warning">Pause Node</button>
+                        <button type="button" class="btn btn-warning" onclick="update_availability('pause')">Pause Node</button>
                     </div>
                     {% endif %}
                     {% if node.get_availability != "drain" %}
                     <div class="row" style="padding-top: 10px;">
-                        <button type="button" class="btn btn-warning">Drain Node</button>
+                        <button type="button" class="btn btn-warning" onclick="update_availability('drain')">Drain Node</button>
                     </div>
                     {% endif %}
                 {% endif %}
@@ -148,6 +148,51 @@ function promote_node() {
         window.location.reload()
     })
 }
+
+function update_availability(state) {
+    const csrftoken = getCookie('csrftoken')
+    console.log(state)
+    $.ajax({
+        url: "/swarman/api/nodes/{{ node.id }}/update",
+        method: "POST",
+        dataType: "json",
+        data: {
+            "Availability" : state
+        },
+        headers: {"X-CSRFToken": csrftoken },
+        success: function(data){
+            console.log(data)
+            window.location.reload()
+        },
+        error: function(data){
+            console.log('Failed')
+            console.log(data.responseJSON)
+        }
+    });
+}
+
+function sync_node() {
+    $.get("/swarman/api/nodes/{{ node.id }}/sync", function(data, status){
+        window.location.reload()
+    })
+}
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 window.onload = get_container_utilization()
+
 </script>
 {% endblock %}
