@@ -249,8 +249,8 @@ class Node(models.Model):
 
     @property
     def get_availability(self):
-        # THIS NEEDS TO BE REMOVED BEFORE PUSH
-        return 'active'
+        
+        #return 'active'
         try:
             result = self.get_node_info()['Spec']['Availability']
             return result
@@ -329,7 +329,7 @@ class Node(models.Model):
         for container in client.containers.list():
             container_utilization = {}
             container_info = container.stats(stream=False)
-            container_utilization['name'] = container.attrs['Name'][0]
+            container_utilization['name'] = container.attrs['Name']
 
             # Calculate Memory Usage per container   
             used_memory = container_info['memory_stats']['usage']
@@ -349,6 +349,8 @@ class Node(models.Model):
         client.close()
        
         return utilization_data
+
+
 class Service(models.Model):
 
     service_name = models.CharField(max_length=64)
