@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import (
     status,
@@ -6,8 +7,10 @@ from rest_framework import (
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.parsers import JSONParser
 
 import json
+import docker
 
 from swarman.models import (
     Swarm,
@@ -16,6 +19,7 @@ from swarman.models import (
 from .serializers import (
     SwarmSerializer,
     NodeSerializer,
+    NodeUpdateSerializer,
 )
 from . import api_utils
 
@@ -155,18 +159,58 @@ def demote_node(request, node_id):
     node = get_object_or_404(Node, id=node_id)
 
     if node.demote():
-        return Response(json.dumps({'success': 'Node Demoted Successfully'}), status=status.HTTP_200_OK)
+        return Response(json.dumps({'success': 'Node Demoted Successfully'}),
+                        status=status.HTTP_200_OK)
 
-    return Response({'error': 'Node was not Demoted'}, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'error': 'Node was not Demoted'},
+                    status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
 def node_utilization(request, node_id):
     """
-    Polls a Node and gets the resource utilization of each container running on the node
-    Returns a Dictionary with Container Name, CPU Utilization, and Memory Utilization
+    Polls a Node and gets the resource utilization of each container running 
+    on the node. Returns a Dictionary with Container Name, CPU Utilization, and 
+    Memory Utilization
     """
 
     node = get_object_or_404(Node, id=node_id)
 
     return Response(node.utilization_per_container(), status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+def update_node_availability(request, node_id):
+    """
+    Updates node availability state. Available states 'active', 'drain', 'pause'
+    Ex:
+    {
+        "Availability" : "active"
+    }
+    """
+    node = get_object_or_404(Node, id=node_id)
+
+    if request.method == 'POST':
+        if "Availability" in request.data.keys():
+
+            if request.data['Availability'] in ('active', 'pause', 'drain'):
+
+                try:
+                    client = docker.DockerClient(
+                        base_url=f'tcp://{node.ip_address}:{node.api_port}')
+
+                    if client.node.update(request.data):
+                        return Response({"Success": "Node Updated Successfully"},
+                                        status=status.HTTP_200_OK)
+
+                except:
+                    return Response({"Error": "Error Updating Node"},
+                                    status=status.HTTP_504_GATEWAY_TIMEOUT)
+
+            else:
+                return Response({"Error": "Invalid Availability State"},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+        else:
+            return Response({"Error": "Invalid Availability State"},
+                            status=status.HTTP_400_BAD_REQUEST)

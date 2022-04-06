@@ -6,8 +6,7 @@ from .api_views import (
     get_existing_swarm_nodes,
     add_existing_swarm_nodes,
     leave_swarm,
-)
-from .api_views import (
+    update_node_availability,
     promote_node,
     demote_node,
     node_utilization,
@@ -38,5 +37,7 @@ urlpatterns = [
     path('nodes/<int:node_id>/promote', promote_node, name='api-node-promote'),
     path('nodes/<int:node_id>/demote', demote_node, name='api-node-demote'),
     path('nodes/<int:node_id>/utilization',
-         node_utilization, name='api-node-utilization')
+         node_utilization, name='api-node-utilization'),
+    path('nodes/<int:node_id>/update', update_node_availability,
+         name='api-update-node')
 ]

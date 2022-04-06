@@ -28,3 +28,21 @@ class NodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Node
         fields = '__all__'
+
+
+class NodeUpdateSerializer(serializers.Serializer):
+    """
+    Serializer for sending Updates to a Node in a swarm
+    """
+    ROLE_CHOICES = (
+        ("worker", "worker"),
+        ("manager", "manager")
+    )
+    AVAIL_CHOICES = (
+        ("available", "available"),
+        ("pause", "pause"),
+        ("drain", "drain")
+    )
+    availability = serializers.ChoiceField(choices=AVAIL_CHOICES)
+    name = serializers.CharField(max_length=64, required=False)
+    role = serializers.ChoiceField(choices=ROLE_CHOICES, required=False)

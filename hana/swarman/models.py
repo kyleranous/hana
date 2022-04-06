@@ -1,3 +1,4 @@
+from unittest import result
 from django.db import models
 from django.utils.html import format_html
 
@@ -8,7 +9,8 @@ import docker
 # Create your models here.
 class Swarm(models.Model):
     """
-    Swarm Model is for multiple swarm management. This is a feature that may be implemented at a future time
+    Swarm Model is for multiple swarm management. This is a feature that may be 
+    implemented at a future time
     """
     swarm_name = models.CharField(max_length=64, unique=True)
     manager_join_token = models.CharField(
@@ -20,11 +22,15 @@ class Swarm(models.Model):
         return f'{self.swarm_name} - {self.node_count} Node Swarm'
 
     def manager_join_command(self):
-        '''Returns a String with the docker swarm join command and Manager Token'''
+        """
+        Returns a String with the docker swarm join command and Manager Token
+        """
         return f'docker swarm join --token {self.manager_join_token}'
 
     def worker_join_command(self):
-        '''Returns a String with the docker swarm join command and Worker Token'''
+        """
+        Returns a String with the docker swarm join command and Worker Token
+        """
         return f'docker swarm join --token {self.worker_join_token}'
 
     def manager_nodes(self):
@@ -187,13 +193,13 @@ class Node(models.Model):
             except Exception as err:
                 pass
 
-        return err
+        return 'Error'
 
     @property
     def get_cpu_load(self):
         '''
-            Calculate the current CPU load on the node, returns value as a percentage
-            Returns float
+            Calculate the current CPU load on the node, returns value as a
+            percentage Returns float
         '''
 
         client = docker.DockerClient(
@@ -250,23 +256,29 @@ class Node(models.Model):
     @property
     def get_status(self):
 
-        return self.get_node_info()['Status']['State']
+        return 'ready'
+        result = self.get_node_info()
+        if result == "Error":
+            return result
+
+        return result['Status']['State']
 
     @property
     def get_availability(self):
 
-        # return 'active'
-        try:
-            result = self.get_node_info()['Spec']['Availability']
+        return 'active'
+        result = self.get_node_info()
+        if result == "Error":
             return result
-        except:
-            return 'Error'
+
+        return result['Spec']['Availability']
 
     @property
     def utilization(self):
         """
-        Calculates the total CPU and memory utalization by services on the node as a percentage.
-        Returns a Tupple (cpu_utilization, memory_utilization)
+        Calculates the total CPU and memory utalization by services on the 
+        node as a percentage. Returns a Tupple: 
+        (cpu_utilization, memory_utilization)
         """
         client = docker.DockerClient(
             base_url=f'tcp://{self.ip_address}:{self.api_port}')
@@ -325,8 +337,9 @@ class Node(models.Model):
 
     def utilization_per_container(self):
         """
-        Calculates the total CPU and memory utalization by containers on the node as a percentage.
-        Returns a list of dictionaries with container name, cpu, and memory utilization
+        Calculates the total CPU and memory utalization by containers on the 
+        node as a percentage. Returns a list of dictionaries with container 
+        name, cpu, and memory utilization
         """
         client = docker.DockerClient(
             base_url=f'tcp://{self.ip_address}:{self.api_port}')
