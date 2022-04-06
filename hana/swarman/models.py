@@ -2,9 +2,7 @@ from django.db import models
 from django.utils.html import format_html
 
 import requests
-import json
 import docker
-import time
 
 
 # Create your models here.
@@ -13,7 +11,8 @@ class Swarm(models.Model):
     Swarm Model is for multiple swarm management. This is a feature that may be implemented at a future time
     """
     swarm_name = models.CharField(max_length=64, unique=True)
-    manager_join_token = models.CharField(max_length=200, blank=True, null=True)
+    manager_join_token = models.CharField(
+        max_length=200, blank=True, null=True)
     worker_join_token = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
@@ -84,21 +83,24 @@ class Swarm(models.Model):
         '''
         return len(self.get_services())
 
+
 class Node(models.Model):
     """
-    
+
     """
     hostname = models.CharField(max_length=64)
-    ip_address = models.GenericIPAddressField(blank=True, null=True, unique=True)
+    ip_address = models.GenericIPAddressField(
+        blank=True, null=True, unique=True)
     api_port = models.CharField(max_length=5)
     role = models.CharField(max_length=16)
-    swarm = models.ForeignKey(Swarm, null=True, on_delete=models.CASCADE, related_name="nodes")
+    swarm = models.ForeignKey(
+        Swarm, null=True, on_delete=models.CASCADE, related_name="nodes")
     docker_version_index = models.CharField(max_length=16)
     node_architecture = models.CharField(max_length=32)
     node_id = models.CharField(max_length=200)
-    total_memory = models.FloatField(default = 0)
-    cpu_count = models.IntegerField(default = 0)
-    os = models.CharField(max_length = 32, default="Unknown")
+    total_memory = models.FloatField(default=0)
+    cpu_count = models.IntegerField(default=0)
+    os = models.CharField(max_length=32, default="Unknown")
     docker_engine = models.CharField(max_length=16, default="Unknown")
 
     def __str__(self):
@@ -166,8 +168,7 @@ class Node(models.Model):
                     client.close()
                     return True
 
-            return False 
-                
+            return False
 
     def get_node_info(self):
         '''
@@ -175,7 +176,7 @@ class Node(models.Model):
         '''
 
         for address in self.swarm.manager_ip_list():
-            
+
             try:
                 client = docker.DockerClient(base_url=f'tcp://{address}')
 
@@ -183,7 +184,7 @@ class Node(models.Model):
                 client.close()
                 return node_data
 
-            except Exception as err: 
+            except Exception as err:
                 pass
 
         return err
@@ -195,14 +196,17 @@ class Node(models.Model):
             Returns float
         '''
 
-        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
+        client = docker.DockerClient(
+            base_url=f'tcp://{self.ip_address}:{self.api_port}')
         total_cpu_load = 0
 
         for container in client.containers.list():
-            
+
             container_info = container.stats(stream=False)
-            cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - container_info['precpu_stats']['cpu_usage']['total_usage']
-            system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - container_info['precpu_stats']['system_cpu_usage']
+            cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - \
+                container_info['precpu_stats']['cpu_usage']['total_usage']
+            system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - \
+                container_info['precpu_stats']['system_cpu_usage']
             number_cpus = container_info['cpu_stats']['online_cpus']
             cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
             total_cpu_load += cpu_usage
@@ -210,22 +214,23 @@ class Node(models.Model):
         client.close()
         return float(format(total_cpu_load, '.2f'))
 
-
     def get_container_info(self, container_id):
         '''
             Get the container info from a node
         '''
-        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
+        client = docker.DockerClient(
+            base_url=f'tcp://{self.ip_address}:{self.api_port}')
 
         return client.services.get(container_id).attrs
-        
+
     @property
     def get_memory_usage(self):
         '''
             Calculate Memory Usage on a Node, returns memory usage as percentage
             Returns Float
         '''
-        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
+        client = docker.DockerClient(
+            base_url=f'tcp://{self.ip_address}:{self.api_port}')
 
         total_memory_load = 0
         # Loop through all containers returned in container JSON
@@ -238,10 +243,10 @@ class Node(models.Model):
             available_memory = container_info['memory_stats']['limit']
             memory_usage = (used_memory / available_memory) * 100.0
             total_memory_load += memory_usage
-        
+
         client.close()
         return float(format(total_memory_load, '.2f'))
-        
+
     @property
     def get_status(self):
 
@@ -249,8 +254,8 @@ class Node(models.Model):
 
     @property
     def get_availability(self):
-        
-        #return 'active'
+
+        # return 'active'
         try:
             result = self.get_node_info()['Spec']['Availability']
             return result
@@ -263,48 +268,52 @@ class Node(models.Model):
         Calculates the total CPU and memory utalization by services on the node as a percentage.
         Returns a Tupple (cpu_utilization, memory_utilization)
         """
-        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
+        client = docker.DockerClient(
+            base_url=f'tcp://{self.ip_address}:{self.api_port}')
 
         total_memory_load = 0
         total_cpu_load = 0
         # Loop through all containers returned in container JSON
         # and calculate memory and cpu usage
-        
+
         for container in client.containers.list():
 
             container_info = container.stats(stream=False)
-            # Calculate Memory Usage per container   
+            # Calculate Memory Usage per container
             used_memory = container_info['memory_stats']['usage']
             available_memory = container_info['memory_stats']['limit']
             memory_usage = (used_memory / available_memory) * 100.0
-            
+
             total_memory_load += memory_usage
 
-            #Calculate CPU Usage per container
-            cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - container_info['precpu_stats']['cpu_usage']['total_usage']
-            system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - container_info['precpu_stats']['system_cpu_usage']
+            # Calculate CPU Usage per container
+            cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - \
+                container_info['precpu_stats']['cpu_usage']['total_usage']
+            system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - \
+                container_info['precpu_stats']['system_cpu_usage']
             number_cpus = container_info['cpu_stats']['online_cpus']
             cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
             total_cpu_load += cpu_usage
-        
 
         client.close()
-        utilization = (float(format(total_cpu_load, '.2f')), float(format(total_memory_load, '.2f')))
+        utilization = (float(format(total_cpu_load, '.2f')),
+                       float(format(total_memory_load, '.2f')))
         return utilization
 
     @property
     def utilization_display(self):
         try:
             result = self.utilization
-        
+
             return format_html("{}<br>{}",
                                f"CPU: {result[0]}%",
                                f"Memory: {result[1]}%")
         except:
             return "Error retreiving node utilization stats"
-                         
+
     def leave_swarm(self):
-        client = docker.DockerClient(base_url=f"tcp://{self.ip_address}:{self.api_port}")
+        client = docker.DockerClient(
+            base_url=f"tcp://{self.ip_address}:{self.api_port}")
 
         if client.swarm.leave():
             self.swarm = None
@@ -314,15 +323,14 @@ class Node(models.Model):
 
         return False
 
-    
     def utilization_per_container(self):
         """
         Calculates the total CPU and memory utalization by containers on the node as a percentage.
         Returns a list of dictionaries with container name, cpu, and memory utilization
         """
-        client = docker.DockerClient(base_url=f'tcp://{self.ip_address}:{self.api_port}')
+        client = docker.DockerClient(
+            base_url=f'tcp://{self.ip_address}:{self.api_port}')
 
-        
         # Loop through all containers returned in container JSON
         # and calculate memory and cpu usage
         utilization_data = []
@@ -331,23 +339,25 @@ class Node(models.Model):
             container_info = container.stats(stream=False)
             container_utilization['name'] = container.attrs['Name']
 
-            # Calculate Memory Usage per container   
+            # Calculate Memory Usage per container
             used_memory = container_info['memory_stats']['usage']
             available_memory = container_info['memory_stats']['limit']
             memory_usage = (used_memory / available_memory) * 100.0
-            container_utilization['memory'] = float(format(memory_usage, '.2f'))
-            
+            container_utilization['memory'] = float(
+                format(memory_usage, '.2f'))
 
-            #Calculate CPU Usage per container
-            cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - container_info['precpu_stats']['cpu_usage']['total_usage']
-            system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - container_info['precpu_stats']['system_cpu_usage']
+            # Calculate CPU Usage per container
+            cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - \
+                container_info['precpu_stats']['cpu_usage']['total_usage']
+            system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - \
+                container_info['precpu_stats']['system_cpu_usage']
             number_cpus = container_info['cpu_stats']['online_cpus']
             cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
             container_utilization['cpu'] = float(format(cpu_usage, '.2f'))
             utilization_data.append(container_utilization)
 
         client.close()
-       
+
         return utilization_data
 
 
