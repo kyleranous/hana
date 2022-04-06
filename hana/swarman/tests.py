@@ -1,6 +1,9 @@
 from django.test import TestCase
 
-from .models import Swarm, Node
+from .models import (
+    Swarm,
+    Node,
+)
 
 
 # Create your tests here.
@@ -29,16 +32,20 @@ class SwarmModelTests(TestCase):
 
     def test_swarm_join_token_commands(self):
         '''Test that swarm returns correct docker join commands for worker and manager'''
-        self.assertEqual(self.swarm.manager_join_command(), 'docker swarm join --token TEst-MaNgEr-ToKeN')
-        self.assertEqual(self.swarm.worker_join_command(), 'docker swarm join --token TEst-WoRkEr-ToKeN')
+        self.assertEqual(self.swarm.manager_join_command(),
+                         'docker swarm join --token TEst-MaNgEr-ToKeN')
+        self.assertEqual(self.swarm.worker_join_command(),
+                         'docker swarm join --token TEst-WoRkEr-ToKeN')
 
     def test_swarm_manager_nodes(self):
         '''Test that manager_nodes() returns all manager nodes belonging to a swarm'''
-        self.assertEqual(list(self.swarm.manager_nodes()), [self.node1, self.node2])
+        self.assertEqual(list(self.swarm.manager_nodes()),
+                         [self.node1, self.node2])
 
     def test_swarm_worker_nodes(self):
         '''Test that worker_nodes() returns all worker nodes belonging to a swarm'''
-        self.assertEqual(list(self.swarm.worker_nodes()), [self.node3, self.node4])
+        self.assertEqual(list(self.swarm.worker_nodes()),
+                         [self.node3, self.node4])
 
     def test_swarm_node_count(self):
         '''Test that node_count returns a count of all Nodes in a swarm'''
@@ -58,7 +65,7 @@ class SwarmModelTests(TestCase):
             all managers assigned to the swarm
         '''
         address_list = [
-            f'{self.node1.ip_address}:{self.node1.api_port}', 
+            f'{self.node1.ip_address}:{self.node1.api_port}',
             f'{self.node2.ip_address}:{self.node2.api_port}'
         ]
 
