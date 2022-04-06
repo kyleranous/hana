@@ -90,14 +90,14 @@ def node_detail(request, node_id):
 
     # Get Container List
     try:
-        #client = docker.DockerClient(base_url=f'tcp://{node.ip_address}:{node.api_port}')
-        #containers = client.containers.list()
-        containers = [{"Names":["/boring_feynman"], "Image": "ubuntu:latest", "Mounts": [{"Name": "test", "Source": "/data", "Destination" : "/data"}]},
-                      {"Names":["/boring_feynman"], "Image": "ubuntu:latest", "Mounts": [{"Name": "test", "Source": "/data", "Destination" : "/data"}]}]
+        client = docker.DockerClient(base_url=f'tcp://{node.ip_address}:{node.api_port}')
+        containers = []
+        for container in client.containers.list():
+            containers.append(container.attrs)
+        
     except:
         containers = [{"error" : "Error retrieving containers"}]
 
-    
     context = {
         'node' : node,
         'containers': containers,

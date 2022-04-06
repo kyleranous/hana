@@ -15,7 +15,7 @@
                     <h5>{{ node.hostname|title }} Details</h5>
                         <p>
                              <!-- Live Data - Get from JS -->
-                            Status - Availability
+                            {{ node.get_status|title }} - {{ node.get_availability|title }}
                         </p>
                         <p>
                             <strong>Utilization</strong><br>
@@ -27,7 +27,7 @@
                         </p>
                         <p>
                             <strong>ID:</strong> {{ node.node_id }} <br>
-                            <strong>Role:</strong> {{ node.role }} - Leader? <br>
+                            <strong>Role:</strong> {{ node.role }} <br>
                             <strong>IP Address:</strong> {{ node.ip_address }} <br>
                             <strong>Architecture:</strong> {{ node.node_architecture }} <br>
                             <strong>OS:</strong> {{ node.os }} <br>
@@ -47,14 +47,14 @@
                         {% if container.error %}
                                 {{ container.error }}
                         {% else %}
-                                <div class="card" style="max-width: 20em; margin-bottom: 10px;">
+                                <div class="card" style="margin-bottom: 10px;">
                                     <div class="card-body">
-                                        <h6 class="card-title">{{ container.Names.0 }}</h6>
+                                        <h6 class="card-title">{{ container.Name }}</h6>
                                         <p class="card-text">
-                                            Image: {{ container.Image }}<br>
-                                            
-                                            CPU Utilization: <span id="{{ container.Names.0 }}-cpu">--%</span><br>
-                                            Memory Utilization: <span id="{{ container.Names.0 }}-cpu">--%</span><br>
+                                            {{ container.State.Status|title }}<br>
+                                            <strong>Image:</strong> {{ container.Config.Image }}<br>
+                                            <strong>CPU Utilization:</strong> <span id="{{ container.Name }}-cpu">--%</span><br>
+                                            <strong>Memory Utilization:</strong> <span id="{{ container.Name }}-memory">--%</span><br>
                                         </p>
                                     </div>
                                 </div>
@@ -73,9 +73,9 @@
                 </div>
                 <div class="row" style="padding-top: 10px; padding-bottom: 20px;">
                 {% if node.role == "Worker" %}
-                    <button type="button" class="btn btn-secondary">Promote Node</button>
+                    <button type="button" class="btn btn-secondary" onclick="promote_node()">Promote Node</button>
                 {% else %}
-                    <button type="button" class="btn btn-secondary">Demote Node</button>
+                    <button type="button" class="btn btn-secondary" onclick="demote_node()">Demote Node</button>
                 {% endif %}
                 </div>
                 <!-- Live Data - Get from JS The Availability Buttons should be populated by Javascript -->
@@ -113,8 +113,41 @@ function get_container_utilization() {
     // And populates the Nodes total usage
     
     //Poll an API Endpoint
+    $.get("/swarman/api/nodes/{{ node.id }}/utilization", function(data, status) {
+        
+        var total_cpu_utilization = 0
+        var total_memory_utilization = 0
+
+        for(var i=0; i < data.length; i++) {
+            total_cpu_utilization += data[i].cpu
+            total_memory_utilization += data[i].memory
+
+            cpu = document.getElementById(`${data[i].name}-cpu`)
+            mem = document.getElementById(`${data[i].name}-memory`)
+
+            cpu.innerHTML = `${data[i].cpu}%`
+            mem.innerHTML = `${data[i].memory}%`
+        }
+        total_display = document.getElementById('node_utilization')
+
+        total_display.innerHTML = `CPU: ${total_cpu_utilization}%<br>Memory: ${total_memory_utilization}%`
+
+        setTimeout(get_container_utilization, 5000)
+       
+    })
 }
 
+function demote_node() {
+    $.get("/swarman/api/nodes/{{ node.id }}/demote", function(data, status){
+        window.location.reload()
+    })
+}
+
+function promote_node() {
+    $.get("/swarman/api/nodes/{{ node.id }}/promote", function(data, status){
+        window.location.reload()
+    })
+}
 window.onload = get_container_utilization()
 </script>
 {% endblock %}
