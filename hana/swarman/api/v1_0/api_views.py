@@ -16,6 +16,7 @@ import docker
 from swarman.models import (
     Swarm,
     Node,
+    Service,
 )
 from .serializers import (
     SwarmSerializer,
@@ -194,7 +195,7 @@ def update_node_availability(request, node_id):
 
     if request.method == 'POST':
         if "Availability" in request.data.keys():
-            
+
             if request.data['Availability'] in ('active', 'pause', 'drain'):
 
                 try:
@@ -202,8 +203,8 @@ def update_node_availability(request, node_id):
                         client = docker.DockerClient(
                             base_url=f"tcp://{address}")
                         update_package = {
-                            'Availability' : request.data['Availability'],
-                            'Role' : node.role
+                            'Availability': request.data['Availability'],
+                            'Role': node.role
                         }
                         print(address)
                         print(update_package)
@@ -247,9 +248,11 @@ def sync_node_data(request, node_id):
             # node_id
             node.node_id = node_data['ID']
             # total_memory
-            node.total_memory = node_data['Description']['Resources']['MemoryBytes']/(10**9)
+            node.total_memory = node_data['Description']['Resources']['MemoryBytes']/(
+                10**9)
             # cpu_count
-            node.cpu_count = node_data['Description']['Resources']['NanoCPUs']/(10**9)
+            node.cpu_count = node_data['Description']['Resources']['NanoCPUs']/(
+                10**9)
             # os
             node.os = node_data['Description']['Platform']['OS']
             # docker_engine
@@ -262,4 +265,60 @@ def sync_node_data(request, node_id):
 
     except:
         return Response({"Error": "Error connecting to node"},
+                        status=status.HTTP_504_GATEWAY_TIMEOUT)
+
+
+@api_view(['GET'])
+def service_pause(request, service_id):
+    """
+    Pauses a service by scaling to zero
+    """
+
+    service = Service.objects.filter(id=service_id).get()
+
+    if service.pause():
+        return Response({"Success": "Service Paused"},
+                        status=status.HTTP_200_OK)
+
+    return Response({"Error": "Error Pausing Service"},
+                    status=status.HTTP_504_GATEWAY_TIMEOUT)
+
+
+@api_view(['GET'])
+def service_restart(request, service_id):
+    """
+    Restarts a service by scaling to Service.desired_replicas
+    """
+
+    service = Service.objects.filter(id=service_id).get()
+
+    if service.restart():
+        return Response({"Success": "Service Restarted"},
+                        status=status.HTTP_200_OK)
+
+    return Response({"Error": "Error Restarting Service"},
+                    status=status.HTTP_504_GATEWAY_TIMEOUT)
+
+
+@api_view(['POST'])
+def service_scale(request):
+    """
+    Scale a service to a desired number of replicas.
+    ex:
+    {
+        "service_id": 3,
+        "replicas": 4
+    }
+    """
+    if request.method == "POST":
+
+        service = get_object_or_404(Service, id=request.data['service_id'])
+
+        if service.scale(request.data['replicas']):
+            service.desired_replicas = request.data['replicas']
+            service.save()
+            return Response({"Success": "Service Scaled"},
+                            status=status.HTTP_200_OK)
+
+        return Response({"Error": "Error Scaling Service"},
                         status=status.HTTP_504_GATEWAY_TIMEOUT)

@@ -400,13 +400,14 @@ class Service(models.Model):
                 service = client.services.get(self.service_id)
 
                 if service.scale(0):
-                    return "Service Paused"
+                    client.close()
+                    return True
             except:
                 pass
 
-        return "Error Pausing Service"
+        return False
 
-    def restart_service(self):
+    def restart(self):
         """
         Scale a service to the number of replicas listed in desired_replicas
         """
@@ -416,11 +417,11 @@ class Service(models.Model):
                 service = client.services.get(self.service_id)
 
                 if service.scale(self.desired_replics):
-                    return "Service Scaled"
+                    return True
             except:
                 pass
 
-        return "Error Scaling Service"
+        return False
 
     def scale_service(self, replicas):
         """
@@ -432,11 +433,11 @@ class Service(models.Model):
                 service = client.services.get(self.service_id)
 
                 if service.scale(replicas):
-                    return "Service Scaled"
+                    return True
             except:
                 pass
 
-        return "Error Scaling Service"
+        return False
 
 
 class Mounts(models.Model):
