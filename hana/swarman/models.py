@@ -1,3 +1,4 @@
+from tempfile import TemporaryFile
 from unittest import result
 from django.db import models
 from django.utils.html import format_html
@@ -388,6 +389,54 @@ class Service(models.Model):
     desired_replicas = models.IntegerField()
     image_name = models.CharField(max_length=64)
     status = models.CharField(max_length=64)
+
+    def pause(self):
+        """
+        Scale a service to 0 replicas.
+        """
+        for address in self.swarm.manager_ip_list():
+            try:
+                client = docker.DockerClient(base_url=f'tcp://{address}')
+                service = client.services.get(self.service_id)
+
+                if service.scale(0):
+                    return "Service Paused"
+            except:
+                pass
+
+        return "Error Pausing Service"
+
+    def restart_service(self):
+        """
+        Scale a service to the number of replicas listed in desired_replicas
+        """
+        for address in self.swarm.manager_ip_list():
+            try:
+                client = docker.DockerClient(base_url=f'tcp://{address}')
+                service = client.services.get(self.service_id)
+
+                if service.scale(self.desired_replics):
+                    return "Service Scaled"
+            except:
+                pass
+
+        return "Error Scaling Service"
+
+    def scale_service(self, replicas):
+        """
+        Scale a service to the desired number of replicas.
+        """
+        for address in self.swarm.manager_ip_list():
+            try:
+                client = docker.DockerClient(base_url=f'tcp://{address}')
+                service = client.services.get(self.service_id)
+
+                if service.scale(replicas):
+                    return "Service Scaled"
+            except:
+                pass
+
+        return "Error Scaling Service"
 
 
 class Mounts(models.Model):
