@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row" style="padding-bottom: 20px">
+        <div class='col' style="padding-top: 10px;">
+        <a class="btn btn-outline-primary" href="{% url 'swarman:swarm-dashboard' node.swarm.id %}">Back to Swarm</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md">
+                <div class="col">
+                    <h5>{{ service.service_name }} Details</h5>
+                        <p>
+                            {{ service.status|title }}
+                             <!-- Live Data - Get from JS -->
+                            {{ service.desired_replicas }} / [RUNNING REPLICAS]
+                        </p>
+                        
+                        <p>
+                            <strong>ID:</strong> {{ service.service_id }} <br>
+                            <strong>Image:</strong> {{ service.image_name }} <br>
+                            <strong>Ports:</strong> {{ service.published_port }} / {{ service.target_port }}  <br>
+                        </p>
+                        
+                </div>
+        </div>
+        <div class="col-sm-3 text-center">
+            <h5>Node Actions</h5>
+                <div class="row" style="padding-top: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="">Sync Service Entry</button>
+                </div>
+                <!-- Live Data - Get from JS The Availability Buttons should be populated by Javascript -->
+                {% if service.status == "paused" %}
+                    <div class="row" style="padding-top: 10px;">
+                        <button type="button" class="btn btn-success" onclick="">Restart Service</button>
+                    </div>
+                {% endif %}
+                {% if service.status == "running" %}
+                    <div class="row" style="padding-top: 10px;">
+                        <button type="button" class="btn btn-warning" onclick="">Pause Service</button>
+                    </div>
+                {% endif %}
+                    <div class="row" style="padding-top: 10px;">
+                        <button type="button" class="btn btn-secondary" onclick="">Scale Service</button>
+                    </div>
+        </div>
+    </div>
+</div>
+
+<script language='javascript'>
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+</script>
+{% endblock %}
