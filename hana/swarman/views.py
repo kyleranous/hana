@@ -28,25 +28,30 @@ def swarm_dashboard(request, swarm_id):
     nodes = swarm.nodes.order_by('hostname')
 
     services = []
+    service_list = swarm.get_services()
 
-    for service in swarm.get_services():
-        service_info = {
-            'name': service['Spec']['Name'],
-            'ID': service['ID'],
-            'image': service['Spec']['TaskTemplate']['ContainerSpec']['Image'].split('@')[0],
-            'replicas': service['Spec']['Mode']['Replicated']['Replicas'],
-            'desired_tasks': service['ServiceStatus']['DesiredTasks'],
-            'target_port': service['Endpoint']['Ports'][0]['TargetPort'],
-            'published_port': service['Endpoint']['Ports'][0]['PublishedPort'],
-        }
-        services.append(service_info)
+    if "Error" not in service_list:
+        for service in swarm.get_services():
+            service_info = {
+                'name': service['Spec']['Name'],
+                'ID': service['ID'],
+                'image': service['Spec']['TaskTemplate']['ContainerSpec']['Image'].split('@')[0],
+                'replicas': service['Spec']['Mode']['Replicated']['Replicas'],
+                'desired_tasks': service['ServiceStatus']['DesiredTasks'],
+                'target_port': service['Endpoint']['Ports'][0]['TargetPort'],
+                'published_port': service['Endpoint']['Ports'][0]['PublishedPort'],
+            }
+            services.append(service_info)
+
+    else:
+        services.append('ERROR')
 
     context = {
         "swarm": swarm,
         "nodes": nodes,
         "services": services,
     }
-
+    # print(services)
     return render(request, 'swarman/swarm_dashboard.html', context)
 
 
