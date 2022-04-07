@@ -69,18 +69,22 @@ class Swarm(models.Model):
         Return a list of services running on a swarm
         '''
         for ip_address in self.manager_ip_list():
-            #client = docker.DockerClient(base_url=f'tcp://{ip_address}')
-            url = f'http://{ip_address}/services?status=true'
-            response = requests.get(url)
+            try:
+                url = f'http://{ip_address}/services?status=true'
+                response = requests.get(url)
 
-            if response.status_code == 200:
-                service_list = response.json
-                services = []
+                if response.status_code == 200:
+                    service_list = response.json
+                    services = []
 
-                for service in service_list():
-                    services.append(service)
+                    for service in service_list():
+                        services.append(service)
 
-                return services
+                    return services
+            except:
+                pass
+
+        return "Error"
 
     @property
     def services_count(self):
@@ -256,7 +260,7 @@ class Node(models.Model):
     @property
     def get_status(self):
 
-        #return 'ready'
+        return 'ready'
         result = self.get_node_info()
         if result == "Error":
             return result
@@ -266,7 +270,7 @@ class Node(models.Model):
     @property
     def get_availability(self):
 
-        #return 'active'
+        return 'active'
         result = self.get_node_info()
         if result == "Error":
             return result
@@ -277,7 +281,7 @@ class Node(models.Model):
     def utilization(self):
         """
         Calculates the total CPU and memory utalization by services on the 
-        node as a percentage. Returns a Tupple: 
+        node as a percentage. Returns a Tuple: 
         (cpu_utilization, memory_utilization)
         """
         client = docker.DockerClient(
