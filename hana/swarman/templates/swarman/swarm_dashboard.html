@@ -6,11 +6,13 @@
         <h2>{{ swarm.swarm_name }}</h2>
     </div>
     <div class="row">
-        <div class="col-9">
+        <div class="col-md">
             <div class="row">
                 <h4>Nodes</h4>
+            </div>
+            <div class="row">
                 {% for node in nodes %}
-                    <div class="col-2 text-center">
+                    <div class="col text-center">
                         <p><h5><a class="link-dark" href="{% url 'swarman:node-detail' node.id %}">{{ node.hostname|title }}</a></h5></p>
                         <p>{{ node.get_availability|title }}</p>
                         <p>{{ node.role }}</p>
@@ -24,7 +26,10 @@
             </div>
             <div class="row">
                 {% for service in services %}
-                    <div class="col-5 text-center align-self-center" style="border: solid; margin: 5px;">
+                    {% if service == 'ERROR' %}
+                        <span style="color: red;">Error Collecting Service List</span>
+                    {% else%}
+                    <div class="col text-center align-self-center" style="border: solid; margin: 5px;">
                         <h5><a class="link-dark" href="#">{{ service.name|title }}</a></h5>
                         {% if service.desired_tasks == 0 %}
                             <span style="color: orange;"><strong>PAUSED</strong></span> 
@@ -41,14 +46,22 @@
                         Replicas: {{ service.replicas }} / {{ service.desired_tasks }}<br>
 
                     </div>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>
-        <div class="col-2">
-            <p>Swarm Status: </p>
+        <div class="col-sm">
+
+            <h5>Swarm Stats</h5>
+            <p>Health Check: <strong>Coming Soon</strong><br>
             <p>Manager Count: {{ swarm.manager_count }}</p>
             <p>Node Count: {{ swarm.node_count }}</p>
-            <p>Services: {{ swarm.services_count }}</p>
+            <p>Services: 
+                {% if services.0 == "ERROR" %}
+                    <span style="color: red;">{{ services.0 }}</span>
+                {% else %}
+                {{ services|length }}</p>
+                {% endif %}
         </div>
     </div>
 
