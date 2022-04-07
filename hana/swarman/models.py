@@ -256,7 +256,7 @@ class Node(models.Model):
     @property
     def get_status(self):
 
-        return 'ready'
+        #return 'ready'
         result = self.get_node_info()
         if result == "Error":
             return result
@@ -266,7 +266,7 @@ class Node(models.Model):
     @property
     def get_availability(self):
 
-        return 'active'
+        #return 'active'
         result = self.get_node_info()
         if result == "Error":
             return result

@@ -1,4 +1,3 @@
-from click import get_binary_stream
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
@@ -187,24 +186,33 @@ def update_node_availability(request, node_id):
     Updates node availability state. Available states 'active', 'drain', 'pause'
     Ex:
     {
-        "Availability" : "active"
+        "Availability" : "active",
+        "Role" : 'worker'
     }
     """
     node = get_object_or_404(Node, id=node_id)
 
     if request.method == 'POST':
         if "Availability" in request.data.keys():
-            print("*********************************")
-            print(request.data)
+            
             if request.data['Availability'] in ('active', 'pause', 'drain'):
 
                 try:
-                    client = docker.DockerClient(
-                        base_url=f'tcp://{node.ip_address}:{node.api_port}')
-
-                    if client.node.update(request.data):
-                        return Response({"Success": "Node Updated Successfully"},
-                                        status=status.HTTP_200_OK)
+                    for address in node.swarm.manager_ip_list():
+                        client = docker.DockerClient(
+                            base_url=f"tcp://{address}")
+                        update_package = {
+                            'Availability' : request.data['Availability'],
+                            'Role' : node.role
+                        }
+                        print(address)
+                        print(update_package)
+                        update_node = client.nodes.get(node.hostname)
+                        print(update_node.attrs)
+                        update_node.reload()
+                        if update_node.update(update_package):
+                            return Response({"Success": "Node Updated Successfully"},
+                                            status=status.HTTP_200_OK)
 
                 except:
                     return Response({"Error": "Error Updating Node"},
@@ -226,31 +234,31 @@ def sync_node_data(request, node_id):
     docker API
     """
     node = get_object_or_404(Node, id=node_id)
-
     try:
-        client = docker.DockerClient(
-            base_url=f"tcp://{node.ip_address}:{node.api_port}")
-        node_data = client.nodes.get(node.hostname).attrs
+        for address in node.swarm.manager_ip_list():
+            client = docker.DockerClient(
+                base_url=f"tcp://{address}")
+            node_data = client.nodes.get(node.hostname).attrs
 
-        # role
-        node.role = node_data['Description']['Hostname'].title()
-        # node_architecture
-        node.node_architecture = node_data['Description']['Platform']['Architecture']
-        # node_id
-        node.node_id = node_data['ID']
-        # total_memory
-        node.total_memory = node_data['Description']['Resources']['MemoryBytes']**-9
-        # cpu_count
-        node.cpu_count = node_data['Description']['Resources']['NanoCPUs']**-9
-        # os
-        node.os = node_data['Description']['Platform']['OS']
-        # docker_engine
-        node.docker_engine = node_data['Description']['Engine']['EngineVersion']
+            # role
+            node.role = node_data['Spec']['Role'].title()
+            # node_architecture
+            node.node_architecture = node_data['Description']['Platform']['Architecture']
+            # node_id
+            node.node_id = node_data['ID']
+            # total_memory
+            node.total_memory = node_data['Description']['Resources']['MemoryBytes']/(10**9)
+            # cpu_count
+            node.cpu_count = node_data['Description']['Resources']['NanoCPUs']/(10**9)
+            # os
+            node.os = node_data['Description']['Platform']['OS']
+            # docker_engine
+            node.docker_engine = node_data['Description']['Engine']['EngineVersion']
 
-        node.save()
+            node.save()
 
-        return Response({'Success': 'Node entry synced'},
-                        status=status.HTTP_200_OK)
+            return Response({'Success': 'Node entry synced'},
+                            status=status.HTTP_200_OK)
 
     except:
         return Response({"Error": "Error connecting to node"},

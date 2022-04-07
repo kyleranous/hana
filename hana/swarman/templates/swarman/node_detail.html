@@ -32,7 +32,7 @@
                             <strong>Architecture:</strong> {{ node.node_architecture }} <br>
                             <strong>OS:</strong> {{ node.os }} <br>
                             <strong>CPU Count:</strong> {{ node.cpu_count }} <br>
-                            <strong>Total Memory:</strong> {{ node.total_memory }} <br>
+                            <strong>Total Memory:</strong> {{ node.total_memory|floatformat:3 }}GB <br>
                             <strong>Docker Engine Version:</strong> {{ node.docker_engine }}
                         </p>
                         
