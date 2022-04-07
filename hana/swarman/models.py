@@ -401,6 +401,8 @@ class Service(models.Model):
 
                 if service.scale(0):
                     client.close()
+                    self.status = "paused"
+                    self.save()
                     return True
             except:
                 pass
@@ -417,6 +419,8 @@ class Service(models.Model):
                 service = client.services.get(self.service_id)
 
                 if service.scale(self.desired_replics):
+                    self.status = "running"
+                    self.save()
                     return True
             except:
                 pass
