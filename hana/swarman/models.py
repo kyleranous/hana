@@ -87,12 +87,37 @@ class Swarm(models.Model):
 
         return "Error"
 
+
     @property
     def services_count(self):
         '''
         Return a count of services running on a swarm
         '''
         return len(self.get_services())
+
+    def get_service_data(self, service_id):
+        '''
+        Return the attrs dict of a service item
+        '''
+        for address in self.manager_ip_list():
+            client = docker.DockerClient(base_url=f"tcp://{address}")
+            service = client.services.get(service_id)
+            client.close()
+            return service.attrs
+
+
+        return "Error retrieving service information"
+
+    def get_service_tasks(self, service_id):
+        '''
+        Return running tasks assinged to a service
+        '''
+        for address in self.manager_ip_list():
+            client = docker.DockerClient(base_url=f'tcp://{address}')
+            service = client.services.get(service_id)
+            client.close
+            return service.tasks({'desired-state':'running'})
+            
 
 
 class Node(models.Model):
@@ -261,7 +286,7 @@ class Node(models.Model):
     @property
     def get_status(self):
 
-        return 'ready'
+        #return 'ready'
         result = self.get_node_info()
         if result == "Error":
             return result
@@ -271,7 +296,7 @@ class Node(models.Model):
     @property
     def get_availability(self):
 
-        return 'active'
+        #return 'active'
         result = self.get_node_info()
         if result == "Error":
             return result

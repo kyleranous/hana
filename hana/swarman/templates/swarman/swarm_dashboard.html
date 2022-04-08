@@ -30,7 +30,7 @@
                         <span style="color: red;">Error Collecting Service List</span>
                     {% else%}
                     <div class="col text-center align-self-center" style="border: solid; margin: 5px;">
-                        <h5><a class="link-dark" href="#">{{ service.name|title }}</a></h5>
+                        <h5><a class="link-dark" href="{% url 'swarman:service-detail' swarm.id %}?service={{ service.ID }}">{{ service.name|title }}</a></h5>
                         {% if service.desired_tasks == 0 %}
                             <span style="color: orange;"><strong>PAUSED</strong></span> 
                         {% elif 0 < service.replicas and service.replicas < service.desired_tasks %}

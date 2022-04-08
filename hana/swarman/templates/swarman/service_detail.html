@@ -5,39 +5,44 @@
 <div class="container">
     <div class="row" style="padding-bottom: 20px">
         <div class='col' style="padding-top: 10px;">
-        <a class="btn btn-outline-primary" href="{% url 'swarman:swarm-dashboard' service.swarm.id %}">Back to Swarm</a>
+        <a class="btn btn-outline-primary" href="{% url 'swarman:swarm-dashboard' swarm_id %}">Back to Swarm</a>
         </div>
     </div>
     <div class="row">
         <div class="col-md">
                 <div class="col">
-                    <h5>{{ service.service_name }} Details</h5>
+                    <h5>{{ service.Spec.Name }} Details</h5>
                         <p>
-                            {{ service.status|title }}
+                            {% if running_tasks == service.Spec.Mode.Replicated.Replicas %}
+                                Running<br>
+                            {% elif running_tasks == 0 and service.Spec.Mode.Replicated.Replicas == 0%}
+                                Paused<br>
+                            {% elif 0 < running_tasks < service.Spec.Mode.Replicated.Replicas %}
+                                Degraded<br>
+                            {% elif running_tasks == 0 %}
+                                Error<br>
+                            {% endif %}
                              <!-- Live Data - Get from JS -->
-                            {{ service.desired_replicas }} / [RUNNING REPLICAS]
+                            {{ running_tasks }} / {{ service.Spec.Mode.Replicated.Replicas }}
                         </p>
                         
                         <p>
-                            <strong>ID:</strong> {{ service.service_id }} <br>
-                            <strong>Image:</strong> {{ service.image_name }} <br>
-                            <strong>Ports:</strong> {{ service.published_port }} / {{ service.target_port }}  <br>
+                            <strong>ID:</strong> {{ service.ID }} <br>
+                            <strong>Image:</strong> {{ service.Spec.TaskTemplate.ContainerSpec.Image }} <br>
+                            <strong>Ports:</strong> {{ service.Spec.EndpointSpec.Ports.0.PublishedPort }} / {{ service.Spec.EndpointSpec.Ports.0.TargetPort }}  <br>
                         </p>
                         
                 </div>
         </div>
         <div class="col-sm-3 text-center">
             <h5>Node Actions</h5>
-                <div class="row" style="padding-top: 10px;">
-                    <button type="button" class="btn btn-secondary" onclick="">Sync Service Entry</button>
-                </div>
                 <!-- Live Data - Get from JS The Availability Buttons should be populated by Javascript -->
-                {% if service.status == "paused" %}
+                {% if running_tasks == 0 and service.Spec.Mode.Replicated.Replicas == 0 %}
                     <div class="row" style="padding-top: 10px;">
                         <button type="button" class="btn btn-success" onclick="">Restart Service</button>
                     </div>
                 {% endif %}
-                {% if service.status == "running" %}
+                {% if 0 < running_tasks and service.Spec.Mode.Replicated.Replicas > 0 %}
                     <div class="row" style="padding-top: 10px;">
                         <button type="button" class="btn btn-warning" onclick="">Pause Service</button>
                     </div>
