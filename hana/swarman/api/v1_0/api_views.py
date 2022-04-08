@@ -268,57 +268,32 @@ def sync_node_data(request, node_id):
                         status=status.HTTP_504_GATEWAY_TIMEOUT)
 
 
-@api_view(['GET'])
-def service_pause(request, service_id):
-    """
-    Pauses a service by scaling to zero
-    """
-
-    service = Service.objects.filter(id=service_id).get()
-
-    if service.pause():
-        return Response({"Success": "Service Paused"},
-                        status=status.HTTP_200_OK)
-
-    return Response({"Error": "Error Pausing Service"},
-                    status=status.HTTP_504_GATEWAY_TIMEOUT)
-
-
-@api_view(['GET'])
-def service_restart(request, service_id):
-    """
-    Restarts a service by scaling to Service.desired_replicas
-    """
-
-    service = Service.objects.filter(id=service_id).get()
-
-    if service.restart():
-        return Response({"Success": "Service Restarted"},
-                        status=status.HTTP_200_OK)
-
-    return Response({"Error": "Error Restarting Service"},
-                    status=status.HTTP_504_GATEWAY_TIMEOUT)
-
-
 @api_view(['POST'])
 def service_scale(request):
     """
     Scale a service to a desired number of replicas.
     ex:
     {
-        "service_id": 3,
+        "swarm_id": 3,
+        "service_id": "9mnpnzenvg8p8tdbtq4wvbkcz", 
         "replicas": 4
     }
     """
     if request.method == "POST":
 
-        service = get_object_or_404(Service, id=request.data['service_id'])
+        swarm = get_object_or_404(Swarm, id=request.data['swarm_id'])
 
-        if service.scale(request.data['replicas']):
-            service.desired_replicas = request.data['replicas']
-            service.save()
-            return Response({"Success": "Service Scaled"},
-                            status=status.HTTP_200_OK)
+        for address in swarm.manager_ip_list():
+            try:
+                client = docker.DockerClient(base_url=f'tcp://{address}')
+                service = client.services.get(request.data['service_id'])
 
-        return Response({"Error": "Error Scaling Service"},
+                if service.scale(request.data['replicas']):
+                    client.close()
+                    return Response({"Success": f"Scaled service to {request.data['replicas']}"},
+                                    status=status.HTTP_200_OK)
+            except:
+                client.close()
+
+        return Response({'Error': 'Error Connecting to Swarm'},
                         status=status.HTTP_504_GATEWAY_TIMEOUT)

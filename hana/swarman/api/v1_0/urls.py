@@ -12,8 +12,6 @@ from .api_views import (
     node_utilization,
     sync_node_data,
     service_scale,
-    service_pause,
-    service_restart,
 )
 
 
@@ -47,8 +45,4 @@ urlpatterns = [
     path('nodes/<int:node_id>/sync', sync_node_data, name='api-sync-node'),
 
     path('service/scale', service_scale, name='api-service-scale'),
-    path('service/<int:service_id>/pause', service_pause,
-         name='api-service-pause'),
-    path('service/<int:service_id>/restart', service_restart,
-         name='api-service-restart'),
 ]
