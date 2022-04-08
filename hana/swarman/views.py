@@ -158,3 +158,21 @@ class AddSwarm(View):
     def post(self, request, *args, **kwargs):
         # If request contains
         pass
+
+
+def service_detail(request, swarm_id):
+
+    if request.method == "GET":
+
+        service_id = request.GET.get('service', None)
+        context = {
+            'swarm_id' : swarm_id,
+        }
+        swarm = get_object_or_404(Swarm, id=swarm_id)
+        if service_id:
+            context['service'] = swarm.get_service_data(service_id)
+            context['running_tasks'] = len(swarm.get_service_tasks(service_id))
+        else:
+            context['error'] = 'Service ID is a required URL parameter'
+
+        return render(request, 'swarman/service_detail.html', context)
