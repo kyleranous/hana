@@ -56,45 +56,6 @@ def swarm_dashboard(request, swarm_id):
     return render(request, 'swarman/swarm_dashboard.html', context)
 
 
-def dashboard(request):
-    """
-    Displays information on nodes and services running on the swarm
-    """
-
-    node_response = requests.get(SWARM_MANAGER_URL + '/nodes')
-    node_data = node_response.text
-
-    nodes_json = json.loads(node_data)
-
-    nodes = []
-    for node in nodes_json:
-
-        nodes.append((node['Description']['Hostname'],
-                      node['Status']['State'],
-                      node['Spec']['Role']))
-
-    service_response = requests.get(SWARM_MANAGER_URL + '/services?status=1')
-    print(SWARM_MANAGER_URL + '/services?status=1')
-    service_data = service_response.text
-    service_json = json.loads(service_data)
-    services = []
-    for service in service_json:
-        services.append((service['Spec']['Name'],
-                         service['Spec']['TaskTemplate']['ContainerSpec']['Image'].split(
-                             '@')[0],
-                         service['CreatedAt'],
-                         service['Endpoint']['Ports'][0]['TargetPort'],
-                         service['Endpoint']['Ports'][0]['PublishedPort']))
-
-    context = {
-
-        'nodes': nodes,
-        'services': services,
-    }
-
-    return render(request, 'swarman/dashboard.html', context)
-
-
 def node_detail(request, node_id):
     """
     Displays Node Specific Details
