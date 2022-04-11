@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <h2>{{ swarm.swarm_name }}</h2>
+    </div>
+    <div class="row">
+        <div class="col-md">
+            <div class="row">
+                <h4>Nodes</h4>
+            </div>
+            <div class="row">
+                {% for node in nodes %}
+                    <div class="col text-center">
+                        <p><h5><a class="link-dark" href="{% url 'swarman:node-detail' node.id %}">{{ node.hostname|title }}</a></h5></p>
+                        <p>{{ node.get_availability|title }}</p>
+                        <p>{{ node.role }}</p>
+                        <p><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="{% if node.get_status == 'ready' %}green{% else %}red{% endif %}" class="bi bi-circle-fill" viewbox="0 0 10 10"><circle cx="5" cy="5" r="5" /></svg> {{ node.get_status|title }}
+
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="row">
+                <h4>Services</h4>
+            </div>
+            <div class="row">
+                {% for service in services %}
+                    {% if service == 'ERROR' %}
+                        <span style="color: red;">Error Collecting Service List</span>
+                    {% else%}
+                    <div class="col text-center align-self-center" style="border: solid; margin: 5px;">
+                        <h5><a class="link-dark" href="{% url 'swarman:service-detail' swarm.id %}?service={{ service.ID }}">{{ service.name|title }}</a></h5>
+                        {% if service.desired_tasks == 0 %}
+                            <span style="color: orange;"><strong>PAUSED</strong></span> 
+                        {% elif 0 < service.replicas and service.replicas < service.desired_tasks %}
+                            <span style="color: #B25F4A;"><strong>DEGRADED</strong></span>
+                        {% elif service.replicas == 0 and service.desired_tasks > 0 %}
+                            <span style="color: red;"><strong>ERROR</strong></span>
+                        {% else %}
+                            <span style="color: green;"><strong>RUNNING</strong></span>
+                        {% endif %}
+                        <p>ID: {{ service.ID }}<br>
+                        Image: {{ service.image }}<br>
+                        Port: {{ service.published_port }} / {{ service.target_port }}<br>
+                        Replicas: {{ service.replicas }} / {{ service.desired_tasks }}<br>
+
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-sm">
+
+            <h5>Swarm Stats</h5>
+            <p>Health Check: <strong>Coming Soon</strong><br>
+            <p>Manager Count: {{ swarm.manager_count }}</p>
+            <p>Node Count: {{ swarm.node_count }}</p>
+            <p>Services: 
+                {% if services.0 == "ERROR" %}
+                    <span style="color: red;">{{ services.0 }}</span>
+                {% else %}
+                {{ services|length }}</p>
+                {% endif %}
+        </div>
+    </div>
+
+{% endblock %}

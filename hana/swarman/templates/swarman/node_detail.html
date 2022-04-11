@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row" style="padding-bottom: 20px">
+        <div class='col' style="padding-top: 10px;">
+        <a class="btn btn-outline-primary" href="{% url 'swarman:swarm-dashboard' node.swarm.id %}">Back to Swarm</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md">
+            <div class="row">
+                <div class="col">
+                    <h5>{{ node.hostname|title }} Details</h5>
+                        <p>
+                             <!-- Live Data - Get from JS -->
+                            {{ node.get_status|title }} - {{ node.get_availability|title }}
+                        </p>
+                        <p>
+                            <strong>Utilization</strong><br>
+                            <!-- Live Data - Get from JS -->
+                            <span id="node_utilization">
+                                CPU: --%<br>
+                                Memory: --%
+                            </span>
+                        </p>
+                        <p>
+                            <strong>ID:</strong> {{ node.node_id }} <br>
+                            <strong>Role:</strong> {{ node.role }} <br>
+                            <strong>IP Address:</strong> {{ node.ip_address }} <br>
+                            <strong>Architecture:</strong> {{ node.node_architecture }} <br>
+                            <strong>OS:</strong> {{ node.os }} <br>
+                            <strong>CPU Count:</strong> {{ node.cpu_count }} <br>
+                            <strong>Total Memory:</strong> {{ node.total_memory|floatformat:3 }}GB <br>
+                            <strong>Docker Engine Version:</strong> {{ node.docker_engine }}
+                        </p>
+                        
+                </div>
+            </div>
+        
+            <div class="row">
+                <div class="col">
+                <h5>Containers</h5>
+                {% if containers %}
+                    {% for container in containers %}
+                        {% if container.error %}
+                                {{ container.error }}
+                        {% else %}
+                                <div class="card" style="margin-bottom: 10px;">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ container.Name }}</h6>
+                                        <p class="card-text">
+                                            {{ container.State.Status|title }}<br>
+                                            <strong>Image:</strong> {{ container.Config.Image }}<br>
+                                            <strong>CPU Utilization:</strong> <span id="{{ container.Name }}-cpu">--%</span><br>
+                                            <strong>Memory Utilization:</strong> <span id="{{ container.Name }}-memory">--%</span><br>
+                                        </p>
+                                    </div>
+                                </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                No Containers Running on {{ node.hostname }}
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-3 text-center">
+            <h5>Node Actions</h5>
+                <div class="row" style="padding-top: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="sync_node()">Sync Node Entry</button>
+                </div>
+                <div class="row" style="padding-top: 10px; padding-bottom: 20px;">
+                {% if node.role == "Worker" %}
+                    <button type="button" class="btn btn-secondary" onclick="promote_node()">Promote Node</button>
+                {% else %}
+                    <button type="button" class="btn btn-secondary" onclick="demote_node()">Demote Node</button>
+                {% endif %}
+                </div>
+                <!-- Live Data - Get from JS The Availability Buttons should be populated by Javascript -->
+                {% if node.get_availability == "Error" %}
+                    Can not get Node Availability
+                {% else %}
+                    {% if node.get_availability != "active" %}
+                    <div class="row" style="padding-top: 10px;">
+                        <button type="button" class="btn btn-success" onclick="update_availability('active')">Activate Node</button>
+                    </div>
+                    {% endif %}
+                    {% if node.get_availability != "pause" %}
+                    <div class="row" style="padding-top: 10px;">
+                        <button type="button" class="btn btn-warning" onclick="update_availability('pause')">Pause Node</button>
+                    </div>
+                    {% endif %}
+                    {% if node.get_availability != "drain" %}
+                    <div class="row" style="padding-top: 10px;">
+                        <button type="button" class="btn btn-warning" onclick="update_availability('drain')">Drain Node</button>
+                    </div>
+                    {% endif %}
+                {% endif %}
+                <div class="row" style="padding-top: 30px;">
+                    <button type="button" class="btn btn-danger" disabled>Leave Swarm</button>
+                </div>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script language='javascript'>
+function get_container_utilization() {
+    // This function will hit an endpoint that pulls from all the containers
+    // And pulls the information for each container then sums the totals
+    // And populates the Nodes total usage
+    
+    //Poll an API Endpoint
+    $.get("/swarman/api/nodes/{{ node.id }}/utilization", function(data, status) {
+        
+        var total_cpu_utilization = 0
+        var total_memory_utilization = 0
+
+        for(var i=0; i < data.length; i++) {
+            total_cpu_utilization += data[i].cpu
+            total_memory_utilization += data[i].memory
+
+            cpu = document.getElementById(`${data[i].name}-cpu`)
+            mem = document.getElementById(`${data[i].name}-memory`)
+
+            cpu.innerHTML = `${data[i].cpu}%`
+            mem.innerHTML = `${data[i].memory}%`
+        }
+        total_display = document.getElementById('node_utilization')
+
+        total_display.innerHTML = `CPU: ${total_cpu_utilization}%<br>Memory: ${total_memory_utilization}%`
+
+        setTimeout(get_container_utilization, 5000)
+       
+    })
+}
+
+function demote_node() {
+    $.get("/swarman/api/nodes/{{ node.id }}/demote", function(data, status){
+        window.location.reload()
+    })
+}
+
+function promote_node() {
+    $.get("/swarman/api/nodes/{{ node.id }}/promote", function(data, status){
+        window.location.reload()
+    })
+}
+
+function update_availability(state) {
+    const csrftoken = getCookie('csrftoken')
+    console.log(state)
+    $.ajax({
+        url: "/swarman/api/nodes/{{ node.id }}/update",
+        method: "POST",
+        dataType: "json",
+        data: {
+            "Availability" : state
+        },
+        headers: {"X-CSRFToken": csrftoken },
+        success: function(data){
+            console.log(data)
+            window.location.reload()
+        },
+        error: function(data){
+            console.log('Failed')
+            console.log(data.responseJSON)
+        }
+    });
+}
+
+function sync_node() {
+    $.get("/swarman/api/nodes/{{ node.id }}/sync", function(data, status){
+        window.location.reload()
+    })
+}
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+window.onload = get_container_utilization()
+
+</script>
+{% endblock %}
