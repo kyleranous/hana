@@ -5,45 +5,49 @@
 <div class="container">
     <div class="row" style="padding-bottom: 20px">
         <div class='col' style="padding-top: 10px;">
-        <a class="btn btn-outline-primary" href="{% url 'swarman:swarm-dashboard' service.swarm.id %}">Back to Swarm</a>
+        <a class="btn btn-outline-primary" href="{% url 'swarman:swarm-dashboard' swarm_id %}">Back to Swarm</a>
         </div>
     </div>
     <div class="row">
         <div class="col-md">
                 <div class="col">
-                    <h5>{{ service.service_name }} Details</h5>
+                    <h5>{{ service_name|title }} Details</h5>
                         <p>
-                            {{ service.status|title }}
+                            {{ service_status_display }} <br>
                              <!-- Live Data - Get from JS -->
-                            {{ service.desired_replicas }} / [RUNNING REPLICAS]
+                             {{ running_tasks }} / {{ replicas }}
                         </p>
                         
                         <p>
-                            <strong>ID:</strong> {{ service.service_id }} <br>
-                            <strong>Image:</strong> {{ service.image_name }} <br>
-                            <strong>Ports:</strong> {{ service.published_port }} / {{ service.target_port }}  <br>
+                            <strong>ID:</strong> {{ service_id }} <br>
+                            <strong>Image:</strong> {{ image }} <br>
+                            <strong>Ports:</strong> {{ published_port }} / {{ target_port }}  <br>
                         </p>
                         
                 </div>
         </div>
         <div class="col-sm-3 text-center">
             <h5>Node Actions</h5>
-                <div class="row" style="padding-top: 10px;">
-                    <button type="button" class="btn btn-secondary" onclick="">Sync Service Entry</button>
-                </div>
                 <!-- Live Data - Get from JS The Availability Buttons should be populated by Javascript -->
-                {% if service.status == "paused" %}
+                {% if service_status == "Paused" %}
                     <div class="row" style="padding-top: 10px;">
                         <button type="button" class="btn btn-success" onclick="scale_service(1)">Restart Service</button>
                     </div>
                 {% endif %}
-                {% if service.status == "running" %}
+                {% if service_status == "Running" or service_status == "Degraded" %}
                     <div class="row" style="padding-top: 10px;">
                         <button type="button" class="btn btn-warning" onclick="scale_service(0)">Pause Service</button>
                     </div>
                 {% endif %}
                     <div class="row" style="padding-top: 10px;">
-                        <button type="button" class="btn btn-secondary" onclick="">Scale Service</button>
+                        <button type="button" class="btn btn-secondary" onclick="openScaleForm()">Scale Service</button>
+                    </div>
+                    <div class="row" style="padding-top:10px;">
+                        <div class="input-group" id="scale_form" style="visibility: hidden;">
+                            <span class="input-group-text">Replicas:</span>
+                            <input type="number" class="form-control" value="1" min="0" name="replica_count" id="replica_count">
+                            <button class="btn btn-outline-secondary" type="button" onclick="scale()">Scale</button>
+                        </div>
                     </div>
         </div>
     </div>
@@ -52,7 +56,36 @@
 <script language='javascript'>
 
 function scale_service(replicas) {
-    
+
+    const csrftoken = getCookie('csrftoken')
+    $.ajax({
+        url: "/swarman/api/service/scale",
+        method: "POST",
+        dataType: "json",
+        data: {
+            "swarm_id" : {{ swarm_id }},
+            "service_id" : "{{ service_id }}",
+            "replicas" : replicas
+        },
+        headers: {"X-CSRFToken": csrftoken },
+        success: function(data){
+            console.log(data)
+            window.location.reload()
+        },
+        error: function(data){
+            console.log('Failed')
+            console.log(data.responseJSON)
+        }
+    });
+}
+
+function scale() {
+    var replicas = document.getElementById('replica_count').value;
+    scale_service(replicas);
+}
+
+function openScaleForm() {
+    document.getElementById("scale_form").style.visibility = "visible";
 }
 
 // Gets value of a cookie for sending POST requests to API

@@ -287,8 +287,8 @@ def service_scale(request):
             try:
                 client = docker.DockerClient(base_url=f'tcp://{address}')
                 service = client.services.get(request.data['service_id'])
-
-                if service.scale(request.data['replicas']):
+                
+                if service.scale(int(request.data['replicas'])):
                     client.close()
                     return Response({"Success": f"Scaled service to {request.data['replicas']}"},
                                     status=status.HTTP_200_OK)

@@ -4,6 +4,7 @@ from django.shortcuts import (
 )
 from django.http import JsonResponse
 from django.views import View
+from django.utils.html import format_html
 
 import requests
 import json
@@ -170,8 +171,38 @@ def service_detail(request, swarm_id):
         }
         swarm = get_object_or_404(Swarm, id=swarm_id)
         if service_id:
-            context['service'] = swarm.get_service_data(service_id)
-            context['running_tasks'] = len(swarm.get_service_tasks(service_id))
+            service = swarm.get_service_data(service_id)
+            tasks = swarm.get_service_tasks(service_id)
+            context['running_tasks'] = 0
+            for task in tasks:
+                if task['Status']['State'] == "running":
+                    context['running_tasks'] += 1
+            
+            context['service_name'] = service['Spec']['Name']
+            context['service_id'] = service['ID']
+            context['replicas'] = service['Spec']['Mode']['Replicated']['Replicas']
+            context['image'] = service['Spec']['TaskTemplate']['ContainerSpec']['Image'].split('@')[0]
+            context['published_port'] = service['Spec']['EndpointSpec']['Ports'][0]['PublishedPort']
+            context['target_port'] = service['Spec']['EndpointSpec']['Ports'][0]['TargetPort']
+            # Calculate Service Status
+            if context['running_tasks'] == 0 and context['replicas'] == 0:
+                context['service_status'] = 'Paused'
+                context['service_status_display'] = format_html('<strong><span style="color: #8B8000;">{}</span></strong>',
+                                                        'Paused')  
+            elif 0 < context['running_tasks'] < context['replicas']:
+                context['service_status'] = 'Degraded'
+                context['service_status_display'] = format_html('<strong><span style="color: orange;">{}</span></strong>',
+                                                        'Degraded')
+            elif 0 == context['running_tasks'] < context['replicas']:
+                context['service_status'] = 'Error'
+                context['service_status_display'] = format_html('<strong><span style="color: red;">{}</span></strong>',
+                                                        'Error')
+            else:
+                context['service_status'] = 'Running'
+                context['service_status_display'] = format_html('<strong><span style="color: green;">{}</span></strong>',
+                                                        'Running')
+            
+            
         else:
             context['error'] = 'Service ID is a required URL parameter'
 
