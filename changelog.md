@@ -4,7 +4,8 @@ All Changes and updates will be documented in this changelog
 ## [Unreleased]
 
  ### Fixed 
-
+ - Swarm Dashboard now displays the correct number of RUNNING tasks
+ 
  ### Added
 
  ### Changed
