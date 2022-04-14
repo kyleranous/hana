@@ -5,6 +5,8 @@ HANA is a Home Automation Server management tool with the goal of making the set
 
 I am using this project to test and learn multiple frameworks/strategies. While I try to maintain consistent look and structure through the project, there is some variation. 
 
+A 10minute video introduction to the UI can be found on [Youtube](https://www.youtube.com/watch?v=xsuzbspv34c)
+
 **NOTE**:<br>
 HANA requires the nodes in the swarms to expose their ports and depending on configuration will run commands as a root user. Currently there is no support for TLS or certificates (On Development Roadmap). If you are using Hana, ***DO NOT*** expose it outside of your network.
 
