@@ -40,3 +40,16 @@ If someone creates a script using API version 1.2, then API 1.4 should still wor
 
  - URL names: kabab-case with each name prepended with api- ex `api-swarm-detail`
  - 
+
+ ## UI
+
+ ### Colors
+
+ **Status Colors**
+ | Status | Color (Hex) |
+ | :---: | :--- |
+ | Running | |
+ | Paused | |
+ | Degraded | #F36411 |
+ | Error | |
+ | Drain | |

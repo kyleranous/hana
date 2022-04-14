@@ -1,4 +1,4 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="/">HANA</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
@@ -13,12 +13,12 @@
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Swarm Manager
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">                    
+                    <ul class="dropdown-menu hana-nav-dropdown" aria-labelledby="navbarDropdown">                    
                         {% for swarm in swarm_list %}
-                            <li><a class="dropdown-item" href="{% url 'swarman:swarm-dashboard' swarm.id %}">{{ swarm.swarm_name }}</a></li>
+                            <li><a class="dropdown-item hana-nav-item" href="{% url 'swarman:swarm-dashboard' swarm.id %}">{{ swarm.swarm_name }}</a></li>
                         {% endfor %}
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{% url 'swarman:new-swarm' %}">New Swarm</a></li>
+                        <li><a class="dropdown-item hana-nav-item" href="{% url 'swarman:new-swarm' %}">New Swarm</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
