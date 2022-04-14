@@ -34,7 +34,7 @@
                         {% if service.desired_tasks == 0 %}
                             <span style="color: orange;"><strong>PAUSED</strong></span> 
                         {% elif 0 < service.replicas and service.replicas < service.desired_tasks %}
-                            <span style="color: #B25F4A;"><strong>DEGRADED</strong></span>
+                        <span style="color: #F36411;"><strong>DEGRADED</strong></span>
                         {% elif service.replicas == 0 and service.desired_tasks > 0 %}
                             <span style="color: red;"><strong>ERROR</strong></span>
                         {% else %}

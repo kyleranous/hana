@@ -42,6 +42,12 @@ def swarm_dashboard(request, swarm_id):
                 'target_port': service['Endpoint']['Ports'][0]['TargetPort'],
                 'published_port': service['Endpoint']['Ports'][0]['PublishedPort'],
             }
+            tasks = swarm.get_service_tasks(service['ID'])
+            service_info['replicas'] = 0
+            for task in tasks:
+                if task['Status']['State'] == "running":
+                    service_info['replicas'] += 1
+
             services.append(service_info)
 
     else:
@@ -152,7 +158,7 @@ def service_detail(request, swarm_id):
                                                         'Paused')  
             elif 0 < context['running_tasks'] < context['replicas']:
                 context['service_status'] = 'Degraded'
-                context['service_status_display'] = format_html('<strong><span style="color: orange;">{}</span></strong>',
+                context['service_status_display'] = format_html('<strong><span style="color: #F36411;">{}</span></strong>',
                                                         'Degraded')
             elif 0 == context['running_tasks'] < context['replicas']:
                 context['service_status'] = 'Error'
