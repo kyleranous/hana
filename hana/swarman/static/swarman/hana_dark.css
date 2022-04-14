@@ -1,22 +1,22 @@
-body {
-    background-color : black;
-}
-
 .hana-nav-dropdown {
     background-color : #292b2c;
-    color: white;
+    color: #BCCCDC;
 }
 
 .hana-nav-item {
-    color: white;
+    color: #BCCCDC;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    color: #E1E1E1;
+h1, h2, h3, h4, h5, h6 a{
+    color: #9FB3C5;
+}
+
+a {
+    color: #9FB3C5;
 }
 
 p {
-    color: #E1E1E1;
+    color: #BCCCDC
 }
 
 .card-body {
