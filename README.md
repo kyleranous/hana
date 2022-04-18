@@ -69,3 +69,12 @@ Connect to each node and make the following changes:
 
 ### Viewing the API Documentation
 Once launched, API documentation can be viewed at `[BASE_ADDRESS]/docs/api`
+
+
+## GraphQL Issues
+
+### ImportError: cannot import name 'force_text' from 'django.utils.encoding'
+
+ 1. Open `venv/lib/site-packagesgraphene_django/utils/utils.py`
+ 1. Change `from django.utils.encoding import force_text` to `from django.utils.encoding import force_str` 
+ 1. Change `s = force_text(s)` to `s = force_str(2)`
