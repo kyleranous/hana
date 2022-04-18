@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'bootstrap5',
     'rest_framework',
     'drf_yasg',
+    'graphine_django',
 ]
 
 MIDDLEWARE = [
