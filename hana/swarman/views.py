@@ -154,19 +154,19 @@ def service_detail(request, swarm_id):
             # Calculate Service Status
             if context['running_tasks'] == 0 and context['replicas'] == 0:
                 context['service_status'] = 'Paused'
-                context['service_status_display'] = format_html('<strong><span style="color: #8B8000;">{}</span></strong>',
+                context['service_status_display'] = format_html('<strong><span class="pause">{}</span></strong>',
                                                         'Paused')  
             elif 0 < context['running_tasks'] < context['replicas']:
                 context['service_status'] = 'Degraded'
-                context['service_status_display'] = format_html('<strong><span style="color: #F36411;">{}</span></strong>',
+                context['service_status_display'] = format_html('<strong><span class="degraded">{}</span></strong>',
                                                         'Degraded')
             elif 0 == context['running_tasks'] < context['replicas']:
                 context['service_status'] = 'Error'
-                context['service_status_display'] = format_html('<strong><span style="color: red;">{}</span></strong>',
+                context['service_status_display'] = format_html('<strong><span class="error">{}</span></strong>',
                                                         'Error')
             else:
                 context['service_status'] = 'Running'
-                context['service_status_display'] = format_html('<strong><span style="color: green;">{}</span></strong>',
+                context['service_status_display'] = format_html('<strong><span class="running">{}</span></strong>',
                                                         'Running')
             
             

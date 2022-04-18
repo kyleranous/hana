@@ -1,24 +1,52 @@
 .hana-nav-dropdown {
-    background-color : #292b2c;
+    background-color : #212121;
     color: #BCCCDC;
 }
 
 .hana-nav-item {
-    color: #BCCCDC;
+    color: #AAAAAA;
 }
 
 h1, h2, h3, h4, h5, h6 a{
-    color: #9FB3C5;
+    color: #FFFFFF;
 }
 
 a {
-    color: #9FB3C5;
+    color: #FFFFFF;
 }
 
 p {
-    color: #BCCCDC
+    color: #FFFFFF;
 }
 
 .card-body {
-    background-color: #212529;
+    background-color: #212121;
+}
+
+.active {
+    color: #0eb9a8;
+}
+
+.ready {
+    color: #0eb9a8;
+}
+
+.running {
+    color: #0eb9a8;
+}
+
+.pause {
+    color: #D89216;
+}
+
+.degraded {
+    color: #F36411;
+}
+
+.error {
+    color: #FF0000;
+}
+
+.drain {
+    color: blue;
 }

@@ -15,7 +15,7 @@
                     <h5>{{ node.hostname|title }} Details</h5>
                         <p>
                              <!-- Live Data - Get from JS -->
-                            {{ node.get_status|title }} - {{ node.get_availability|title }}
+                            <span class="{{ node.get_status }}">{{ node.get_status|title }}</span> - <span class="{{ node.get_availability }}">{{ node.get_availability|title }}</span>
                         </p>
                         <p>
                             <strong>Utilization</strong><br>
