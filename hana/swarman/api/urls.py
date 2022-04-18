@@ -1,3 +1,4 @@
+
 from django.urls import (
     path,
     include,
@@ -6,5 +7,6 @@ from django.urls import (
 
 urlpatterns = [
     path('', include('swarman.api.v1_0.urls')),
+    
     # path('v1.0/', include('swarman.api.v1_0.urls')),
 ]

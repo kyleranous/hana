@@ -52,6 +52,7 @@ class Swarm(models.Model):
         '''Returns a count of all manager nodes assigned to a swarm'''
         return len(self.manager_nodes())
 
+    @property
     def worker_count(self):
         '''Returns a count of all worker nodes assigned to a swarm'''
         return len(self.worker_nodes())
@@ -66,6 +67,29 @@ class Swarm(models.Model):
         return addresses
 
     def get_services(self):
+        '''
+        Return a list of services running on a swarm
+        '''
+        for ip_address in self.manager_ip_list():
+            try:
+                url = f'http://{ip_address}/services?status=true'
+                response = requests.get(url)
+
+                if response.status_code == 200:
+                    service_list = response.json
+                    services = []
+
+                    for service in service_list():
+                        services.append(service)
+
+                    return services
+            except:
+                pass
+
+        return "Error"
+
+    @property
+    def service_list(self):
         '''
         Return a list of services running on a swarm
         '''
@@ -250,6 +274,7 @@ class Node(models.Model):
         client.close()
         return float(format(total_cpu_load, '.2f'))
 
+
     def get_container_info(self, container_id):
         '''
             Get the container info from a node
@@ -258,6 +283,7 @@ class Node(models.Model):
             base_url=f'tcp://{self.ip_address}:{self.api_port}')
 
         return client.services.get(container_id).attrs
+
 
     @property
     def get_memory_usage(self):
@@ -341,6 +367,47 @@ class Node(models.Model):
         utilization = (float(format(total_cpu_load, '.2f')),
                        float(format(total_memory_load, '.2f')))
         return utilization
+
+    @property
+    def get_utilization(self):
+        """
+        Calculates the total CPU and memory utalization by services on the 
+        node as a percentage. Returns a Dictionary 
+        """
+        client = docker.DockerClient(
+            base_url=f'tcp://{self.ip_address}:{self.api_port}')
+
+        total_memory_load = 0
+        total_cpu_load = 0
+        # Loop through all containers returned in container JSON
+        # and calculate memory and cpu usage
+
+        for container in client.containers.list():
+
+            container_info = container.stats(stream=False)
+            # Calculate Memory Usage per container
+            used_memory = container_info['memory_stats']['usage']
+            available_memory = container_info['memory_stats']['limit']
+            memory_usage = (used_memory / available_memory) * 100.0
+
+            total_memory_load += memory_usage
+
+            # Calculate CPU Usage per container
+            cpu_delta = container_info['cpu_stats']['cpu_usage']['total_usage'] - \
+                container_info['precpu_stats']['cpu_usage']['total_usage']
+            system_cpu_delta = container_info['cpu_stats']['system_cpu_usage'] - \
+                container_info['precpu_stats']['system_cpu_usage']
+            number_cpus = container_info['cpu_stats']['online_cpus']
+            cpu_usage = (cpu_delta / system_cpu_delta) * number_cpus * 100.0
+            total_cpu_load += cpu_usage
+
+        client.close()
+        utilization = {
+            "CPU" : float(format(total_cpu_load, '.2f')),
+            "Memory" :float(format(total_memory_load, '.2f'))
+        }
+        return utilization
+
 
     @property
     def utilization_display(self):

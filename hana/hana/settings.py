@@ -48,7 +48,7 @@ INSTALLED_APPS = [
     'bootstrap5',
     'rest_framework',
     'drf_yasg',
-    'graphine_django',
+    'graphene_django',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +142,6 @@ STATICFILES_FINDERS = (
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+GRAPHENE = {
+    "SCHEMA": "hana.schema.schema"
+}

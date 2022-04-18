@@ -25,8 +25,9 @@
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                      Documentation
                     </a>
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                        <li><a class="dropdown-item" href="{% url 'schema-swagger-ui' %}" target="_blank">API Documentation</a></li>
+                    <ul class="dropdown-menu hana-nav-dropdown" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item hana-nav-item" href="{% url 'schema-swagger-ui' %}" target="_blank">REST Documentation</a></li>
+                        <li><a class="dropdown-item hana-nav-item" href="{% url 'schema-graphql' %}" target="_blank">GraphQL Documentation</a></li>
                     </ul>
                 </li>
             </ul>

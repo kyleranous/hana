@@ -15,10 +15,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from graphene_django import GraphQLView
+from graphene_django.views import GraphQLView
+
+
 
 from . import views
 
@@ -39,6 +42,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('swarman/', include(('swarman.urls', 'swarman'), namespace='swarman')),
     path('docs/api', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path("graphql", GraphQLView.as_view(graphiql=True)),
+    path("graphql",csrf_exempt(GraphQLView.as_view(graphiql=True)), name="schema-graphql"),
 ]
 
