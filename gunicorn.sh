@@ -9,7 +9,7 @@ python3 hana/manage.py migrate
 
 python3 hana/manage.py collectstatic --noinput
 
-sudo cp -rf gunicorn.service / etc/systemd/system/
+sudo cp -rf gunicorn.service /etc/systemd/system/
 
 sudo systemctl daemon-reload
 
