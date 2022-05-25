@@ -1,5 +1,6 @@
 #!/bin/bash
 
+cp ~/env hana/.env
 source venv/bin/activate
 
 python3 hana/manage.py makemigrations
