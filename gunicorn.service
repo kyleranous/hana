@@ -6,7 +6,7 @@ After=network.target
 User=jenkins
 Group=nginx
 WorkingDirectory=/var/lib/jenkins/workspace/HANA-TEST
-execStart=/var/lib/jenkins/workspace/HANA-TEST/venv/bin/gunicorn --workers 3 --log-level debug --error-logfile /var/lib/jenkins/workspace/HANA-TEST/error.log --bind unix:/var/lib/jenkins/workspace/HANA-TEST/app.sock hana/hana/hana.wsgi:application
+ExecStart=/var/lib/jenkins/workspace/HANA-TEST/venv/bin/gunicorn --workers 3 --log-level debug --error-logfile /var/lib/jenkins/workspace/HANA-TEST/error.log --bind unix:/var/lib/jenkins/workspace/HANA-TEST/app.sock hana/hana/hana.wsgi:application
 
 [Install]
 WantedBy=multi-user.target
