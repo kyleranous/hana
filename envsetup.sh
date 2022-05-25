@@ -7,7 +7,7 @@ else
     python3 -m venv venv
 fi
 
-source venv/bin/activate
+./venv/bin/activate
 
 
 pip3 install -r requirements.txt
